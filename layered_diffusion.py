@@ -1,16 +1,9 @@
 import os
 from enum import Enum
 import torch
-import json
-import random
-import numpy as np
-from PIL import Image
-from PIL.PngImagePlugin import PngInfo
 
 import folder_paths
 import comfy.model_management
-from nodes import SaveImage
-from comfy.cli_args import args
 from comfy.model_patcher import ModelPatcher
 from comfy.utils import load_torch_file
 from .lib_layerdiffusion.utils import (
@@ -42,69 +35,6 @@ class RGBA2RBGfp32:
         return rgba2rgbfp32(image)
 
 
-class SaveRGBAImage(SaveImage):
-    def save_images(
-        self, images, filename_prefix="ComfyUI", prompt=None, extra_pnginfo=None
-    ):
-        alpha = images[..., :1]
-        fg = images[..., 1:]
-        pngs = torch.cat([fg, alpha], dim=3)
-        pngs = (
-            (pngs * 255.0).detach().cpu().float().numpy().clip(0, 255).astype(np.uint8)
-        )
-
-        filename_prefix += self.prefix_append
-        full_output_folder, filename, counter, subfolder, filename_prefix = (
-            folder_paths.get_save_image_path(
-                filename_prefix, self.output_dir, images[0].shape[1], images[0].shape[0]
-            )
-        )
-        results = list()
-        for batch_number, image in enumerate(pngs):
-            img = Image.fromarray(image)
-            metadata = None
-            if not args.disable_metadata:
-                metadata = PngInfo()
-                if prompt is not None:
-                    metadata.add_text("prompt", json.dumps(prompt))
-                if extra_pnginfo is not None:
-                    for x in extra_pnginfo:
-                        metadata.add_text(x, json.dumps(extra_pnginfo[x]))
-
-            filename_with_batch_num = filename.replace("%batch_num%", str(batch_number))
-            file = f"{filename_with_batch_num}_{counter:05}_.png"
-            img.save(
-                os.path.join(full_output_folder, file),
-                pnginfo=metadata,
-                compress_level=self.compress_level,
-            )
-            results.append(
-                {"filename": file, "subfolder": subfolder, "type": self.type}
-            )
-            counter += 1
-
-        return {"ui": {"images": results}}
-
-
-class PreviewRGBAImage(SaveRGBAImage):
-    def __init__(self):
-        self.output_dir = folder_paths.get_temp_directory()
-        self.type = "temp"
-        self.prefix_append = "_temp_" + "".join(
-            random.choice("abcdefghijklmnopqrstupvxyz") for x in range(5)
-        )
-        self.compress_level = 1
-
-    @classmethod
-    def INPUT_TYPES(s):
-        return {
-            "required": {
-                "images": ("IMAGE",),
-            },
-            "hidden": {"prompt": "PROMPT", "extra_pnginfo": "EXTRA_PNGINFO"},
-        }
-
-
 class LayeredDiffusionDecode:
     """
     Decode alpha channel value from pixel value.
@@ -115,7 +45,7 @@ class LayeredDiffusionDecode:
     def INPUT_TYPES(s):
         return {"required": {"samples": ("LATENT",), "images": ("IMAGE",)}}
 
-    RETURN_TYPES = ("IMAGE",)
+    RETURN_TYPES = ("IMAGE", "MASK")
     FUNCTION = "decode"
     CATEGORY = "layered_diffusion"
 
@@ -143,7 +73,9 @@ class LayeredDiffusionDecode:
         pixel_with_alpha = self.vae_transparent_decoder.decode_pixel(pixel, latent)
         # [B, C, H, W] => [B, H, W, C]
         pixel_with_alpha = pixel_with_alpha.movedim(1, -1)
-        return (pixel_with_alpha,)
+        image = pixel_with_alpha[..., 1:]
+        alpha = pixel_with_alpha[..., 0]
+        return (image, alpha)
 
 
 class LayerMethod(Enum):
@@ -210,13 +142,9 @@ class LayeredDiffusionApply:
 NODE_CLASS_MAPPINGS = {
     "LayeredDiffusionApply": LayeredDiffusionApply,
     "LayeredDiffusionDecode": LayeredDiffusionDecode,
-    "SaveRGBAImage": SaveRGBAImage,
-    "PreviewRGBAImage": PreviewRGBAImage,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
     "LayeredDiffusionApply": "Layered Diffusion Apply",
     "LayeredDiffusionDecode": "Layered Diffusion Decode",
-    "SaveRGBAImage": "Save RGBA Image",
-    "PreviewRGBAImage": "Preview RGBA Image",
 }
