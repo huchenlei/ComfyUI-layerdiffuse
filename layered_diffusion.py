@@ -145,6 +145,6 @@ NODE_CLASS_MAPPINGS = {
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "LayeredDiffusionApply": "Layered Diffusion Apply",
-    "LayeredDiffusionDecode": "Layered Diffusion Decode",
+    "LayeredDiffusionApply": "Layer Diffusion Apply",
+    "LayeredDiffusionDecode": "Layer Diffusion Decode",
 }
