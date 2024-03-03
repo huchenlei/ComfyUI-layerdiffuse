@@ -1,7 +1,7 @@
 # ComfyUI-layereddiffusion
 ComfyUI implementation of https://github.com/layerdiffusion/LayerDiffusion.
 
-![image](https://github.com/huchenlei/ComfyUI-layereddiffusion/assets/20929282/cbf0ec78-9f1a-4369-a084-77215bc5f679)
+![image](https://github.com/huchenlei/ComfyUI-layerdiffusion/assets/20929282/413945a2-0948-405e-b524-e164ba54325d)
 
 ## TODO
 - [ ] Foreground conditioning
