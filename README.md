@@ -13,9 +13,19 @@ that depends on other versions of diffusers.
 If you want more control of getting RGB image and alpha channel mask separately, you can use this workflow.
 ![readme1](https://github.com/huchenlei/ComfyUI-layerdiffusion/assets/20929282/4825b81c-7089-4806-bce7-777229421707)
 
+### [Blending (FG/BG)](https://github.com/huchenlei/ComfyUI-layerdiffusion/blob/main/examples/layer_diffusion_cond_example.json)
+Blending given FG
+![fg_cond](https://github.com/huchenlei/ComfyUI-layerdiffusion/assets/20929282/7f7dee80-6e57-4570-b304-d1f7e5dc3aad)
+
+Blending given BG
+![bg_cond](https://github.com/huchenlei/ComfyUI-layerdiffusion/assets/20929282/e3a79218-6123-453b-a54b-2f338db1c12d)
+
+
 ## Note
 - Currently only SDXL is supported. See https://github.com/layerdiffusion/sd-forge-layerdiffusion#model-notes for more details.
 
 ## TODO
-- [ ] Foreground conditioning
-- [ ] Background conditioning
+- [x] Foreground conditioning
+- [x] Background conditioning
+- [ ] Blended + foreground => background
+- [ ] Blended + background => foreground
