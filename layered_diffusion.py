@@ -32,7 +32,7 @@ def calculate_weight_adjust_channel(func):
             v = p[1]
 
             if isinstance(v, list):
-                v = (func(v[1:], v[0].clone(), key),)
+                v = (func(self, v[1:], v[0].clone(), key),)
 
             if len(v) == 1:
                 patch_type = "diff"
