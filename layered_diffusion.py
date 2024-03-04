@@ -1,7 +1,7 @@
 import os
 from enum import Enum
-import copy
 import torch
+import functools
 
 import folder_paths
 import comfy.model_management
@@ -19,6 +19,65 @@ from .lib_layerdiffusion.models import TransparentVAEDecoder
 
 layer_model_root = os.path.join(folder_paths.models_dir, "layer_model")
 load_layer_model_state_dict = load_torch_file
+
+
+def calculate_weight_adjust_channel(func):
+    @functools.wraps(func)
+    def calculate_weight(
+        self: ModelPatcher, patches, weight: torch.Tensor, key: str
+    ) -> torch.Tensor:
+        weight = func(self, patches, weight, key)
+
+        for p in patches:
+            alpha = p[0]
+            v = p[1]
+
+            if isinstance(v, list):
+                v = (func(v[1:], v[0].clone(), key),)
+
+            if len(v) == 1:
+                patch_type = "diff"
+            elif len(v) == 2:
+                patch_type = v[0]
+                v = v[1]
+
+            if patch_type == "diff":
+                w1 = v[0]
+                if all(
+                    (
+                        alpha != 0.0,
+                        w1.shape != weight.shape,
+                        w1.ndim == weight.ndim == 4,
+                    )
+                ):
+                    new_shape = [max(n, m) for n, m in zip(weight.shape, w1.shape)]
+                    print(f"Merged with {key} channel changed from {weight.shape} to {new_shape}")
+                    new_diff = alpha * comfy.model_management.cast_to_device(
+                        w1, weight.device, weight.dtype
+                    )
+                    new_weight = torch.zeros(size=new_shape).to(weight)
+                    new_weight[
+                        : weight.shape[0],
+                        : weight.shape[1],
+                        : weight.shape[2],
+                        : weight.shape[3],
+                    ] = weight
+                    new_weight[
+                        : new_diff.shape[0],
+                        : new_diff.shape[1],
+                        : new_diff.shape[2],
+                        : new_diff.shape[3],
+                    ] += new_diff
+                    new_weight = new_weight.contiguous().clone()
+                    weight = new_weight
+        return weight
+
+    return calculate_weight
+
+
+ModelPatcher.calculate_weight = calculate_weight_adjust_channel(
+    ModelPatcher.calculate_weight
+)
 
 
 class RGBA2RBGfp32:
