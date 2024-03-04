@@ -20,13 +20,18 @@ Blending given FG
 Blending given BG
 ![bg_cond](https://github.com/huchenlei/ComfyUI-layerdiffusion/assets/20929282/e3a79218-6123-453b-a54b-2f338db1c12d)
 
-### Extract FG from Blended + BG
+### [Extract FG from Blended + BG](https://github.com/huchenlei/ComfyUI-layerdiffusion/blob/main/examples/layer_diffusion_diff_fg.json)
 ![diff_bg](https://github.com/huchenlei/ComfyUI-layerdiffusion/assets/20929282/45c7207d-72ff-4fb0-9c91-687040781837)
 
-### Extract BG from Blended + FG
+### [Extract BG from Blended + FG](https://github.com/huchenlei/ComfyUI-layerdiffusion/blob/main/examples/layer_diffusion_diff_bg.json)
 [Forge impl's sanity check](https://github.com/layerdiffusion/sd-forge-layerdiffusion#sanity-check) sets `Stop at` to 0.5 to get better quality BG.
 This workflow might be inferior comparing to other object removal workflows.
 ![diff_fg](https://github.com/huchenlei/ComfyUI-layerdiffusion/assets/20929282/05a10add-68b0-473a-acee-5853e4720322)
+
+### [Generate FG from BG combined](https://github.com/huchenlei/ComfyUI-layerdiffusion/blob/main/examples/layer_diffusion_cond_fg_all.json)
+Combines previous workflows to generate blended and FG given BG. We found that there are some color variations in the extracted FG. Need to confirm
+with layer diffusion authors on whether this is expected.
+![fg_all](https://github.com/huchenlei/ComfyUI-layerdiffusion/assets/20929282/f4c18585-961a-473a-a616-aa3776bacd41)
 
 ## Note
 - Currently only SDXL is supported. See https://github.com/layerdiffusion/sd-forge-layerdiffusion#model-notes for more details.
