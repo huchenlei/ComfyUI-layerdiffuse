@@ -6,6 +6,7 @@ import folder_paths
 import comfy.model_management
 from comfy.model_patcher import ModelPatcher
 from comfy.utils import load_torch_file
+from comfy_extras.nodes_compositing import JoinImageWithAlpha
 from .lib_layerdiffusion.utils import (
     rgba2rgbfp32,
     load_file_from_url,
@@ -39,6 +40,7 @@ class LayeredDiffusionDecode:
     """
     Decode alpha channel value from pixel value.
     [B, C=3, H, W] => [B, C=4, H, W]
+    Outputs RGB image + Alpha mask.
     """
 
     @classmethod
@@ -76,6 +78,21 @@ class LayeredDiffusionDecode:
         image = pixel_with_alpha[..., 1:]
         alpha = pixel_with_alpha[..., 0]
         return (image, alpha)
+
+
+class LayeredDiffusionDecodeRGBA(LayeredDiffusionDecode):
+    """
+    Decode alpha channel value from pixel value.
+    [B, C=3, H, W] => [B, C=4, H, W]
+    Outputs RGBA image.
+    """
+
+    RETURN_TYPES = ("IMAGE",)
+
+    def decode(self, samples, images):
+        image, mask = super().decode(samples, images)
+        alpha = 1.0 - mask
+        return JoinImageWithAlpha().join_image_with_alpha(image, alpha)
 
 
 class LayerMethod(Enum):
@@ -142,9 +159,11 @@ class LayeredDiffusionApply:
 NODE_CLASS_MAPPINGS = {
     "LayeredDiffusionApply": LayeredDiffusionApply,
     "LayeredDiffusionDecode": LayeredDiffusionDecode,
+    "LayeredDiffusionDecodeRGBA": LayeredDiffusionDecodeRGBA,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
     "LayeredDiffusionApply": "Layer Diffusion Apply",
     "LayeredDiffusionDecode": "Layer Diffusion Decode",
+    "LayeredDiffusionDecodeRGBA": "Layer Diffusion Decode (RGBA)",
 }
