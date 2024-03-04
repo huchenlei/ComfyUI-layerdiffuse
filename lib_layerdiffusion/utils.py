@@ -4,6 +4,8 @@ import cv2
 import torch
 import os
 from urllib.parse import urlparse
+from typing import Optional
+
 
 def rgba2rgbfp32(x):
     rgb = x[..., :3].astype(np.float32) / 255.0
@@ -94,7 +96,7 @@ def load_file_from_url(
     *,
     model_dir: str,
     progress: bool = True,
-    file_name: str | None = None,
+    file_name: Optional[str] = None,
 ) -> str:
     """Download a file from `url` into `model_dir`, using the file present if possible.
 
