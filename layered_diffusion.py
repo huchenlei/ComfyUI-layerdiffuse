@@ -84,7 +84,7 @@ class LayeredDiffusionDecode:
         pixel_with_alpha = pixel_with_alpha.movedim(1, -1)
         image = pixel_with_alpha[..., 1:]
         alpha = pixel_with_alpha[..., 0]
-        return (image.cpu(), alpha.cpu(),)
+        return (image, alpha,)
 
 
 class LayerMethod(Enum):
