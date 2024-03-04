@@ -2,8 +2,16 @@
 ComfyUI implementation of https://github.com/layerdiffusion/LayerDiffusion.
 
 ## Installation
-run `pip install -r requirements.txt` to install python dependencies. You might experience version conflict on diffusers if you have other extensions
-that depends on other versions of diffusers.
+Download the repository and unpack into the custom_nodes folder in the ComfyUI installation directory.
+
+Or clone via GIT, starting from ComfyUI installation directory:
+```bash
+cd custom_nodes
+git clone git@github.com:huchenlei/ComfyUI-layerdiffusion.git
+```
+
+Run `pip install -r requirements.txt` to install python dependencies. You might experience version conflict on diffusers if you have other extensions
+that depends on other versions of diffusers. In this case, it is recommended to setup separate Python venvs.
 
 ## Workflows
 ### [Generate foreground](https://github.com/huchenlei/ComfyUI-layerdiffusion/blob/main/examples/layer_diffusion_fg_example_rgba.json)
