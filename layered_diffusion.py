@@ -1,5 +1,6 @@
 import os
 from enum import Enum
+import copy
 import torch
 
 import folder_paths
@@ -7,6 +8,7 @@ import comfy.model_management
 from comfy.model_patcher import ModelPatcher
 from comfy.utils import load_torch_file
 from comfy_extras.nodes_compositing import JoinImageWithAlpha
+from comfy.conds import CONDRegular
 from .lib_layerdiffusion.utils import (
     rgba2rgbfp32,
     load_file_from_url,
@@ -100,7 +102,52 @@ class LayerMethod(Enum):
     CONV = "Conv Injection"
 
 
-class LayeredDiffusionApply:
+class LayerType(Enum):
+    FG = "Foreground"
+    BG = "Background"
+
+
+class LayeredDiffusionBase:
+    def __init__(self, model_file_name: str, model_url: str) -> None:
+        self.model_file_name = model_file_name
+        self.model_url = model_url
+
+    def apply_c_concat(self, cond, uncond, c_concat):
+        """Set foreground/background concat condition."""
+
+        def write_c_concat(cond):
+            new_cond = []
+            for t in cond:
+                n = [t[0], t[1].copy()]
+                if "model_conds" not in n[1]:
+                    n[1]["model_conds"] = {}
+                n[1]["model_conds"]["c_concat"] = CONDRegular(c_concat)
+                new_cond.append(n)
+            return new_cond
+
+        return (write_c_concat(cond), write_c_concat(uncond))
+
+    def apply_layered_diffusion(
+        self,
+        model: ModelPatcher,
+        weight: float,
+    ):
+        """Patch model"""
+        model_path = load_file_from_url(
+            url=self.model_url,
+            model_dir=layer_model_root,
+            file_name=self.model_file_name,
+        )
+        layer_lora_state_dict = load_layer_model_state_dict(model_path)
+        layer_lora_patch_dict = to_lora_patch_dict(layer_lora_state_dict)
+        work_model = model.clone()
+        work_model.add_patches(layer_lora_patch_dict, weight)
+        return (work_model,)
+
+
+class LayeredDiffusionFG:
+    """Generate foreground with transparent background."""
+
     @classmethod
     def INPUT_TYPES(s):
         return {
@@ -126,44 +173,101 @@ class LayeredDiffusionApply:
     FUNCTION = "apply_layered_diffusion"
     CATEGORY = "layered_diffusion"
 
+    def __init__(self) -> None:
+        self.fg_attn = LayeredDiffusionBase(
+            model_file_name="layer_xl_transparent_attn.safetensors",
+            model_url="https://huggingface.co/LayerDiffusion/layerdiffusion-v1/resolve/main/layer_xl_transparent_attn.safetensors",
+        )
+        self.fg_conv = LayeredDiffusionBase(
+            model_file_name="layer_xl_transparent_conv.safetensors",
+            model_url="https://huggingface.co/LayerDiffusion/layerdiffusion-v1/resolve/main/layer_xl_transparent_conv.safetensors",
+        )
+
     def apply_layered_diffusion(
         self,
         model: ModelPatcher,
         method: str,
         weight: float,
     ):
-        """Patch model"""
         method = LayerMethod(method)
-
-        # Patch unet
         if method == LayerMethod.ATTN:
-            model_path = load_file_from_url(
-                url="https://huggingface.co/LayerDiffusion/layerdiffusion-v1/resolve/main/layer_xl_transparent_attn.safetensors",
-                model_dir=layer_model_root,
-                file_name="layer_xl_transparent_attn.safetensors",
-            )
+            return self.fg_attn.apply_layered_diffusion(model, weight)
         if method == LayerMethod.CONV:
-            model_path = load_file_from_url(
-                url="https://huggingface.co/LayerDiffusion/layerdiffusion-v1/resolve/main/layer_xl_transparent_conv.safetensors",
-                model_dir=layer_model_root,
-                file_name="layer_xl_transparent_conv.safetensors",
-            )
+            return self.fg_conv.apply_layered_diffusion(model, weight)
 
-        layer_lora_state_dict = load_layer_model_state_dict(model_path)
-        layer_lora_patch_dict = to_lora_patch_dict(layer_lora_state_dict)
-        work_model = model.clone()
-        work_model.add_patches(layer_lora_patch_dict, weight)
-        return (work_model,)
+
+class LayeredDiffusionCond:
+    """Generate foreground + background given background / foreground."""
+
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "model": ("MODEL",),
+                "cond": ("CONDITIONING",),
+                "uncond": ("CONDITIONING",),
+                "latent": ("LATENT",),
+                "layer_type": (
+                    [
+                        LayerType.FG.value,
+                        LayerType.BG.value,
+                    ],
+                    {
+                        "default": LayerType.BG.value,
+                    },
+                ),
+                "weight": (
+                    "FLOAT",
+                    {"default": 1.0, "min": -1, "max": 3, "step": 0.05},
+                ),
+            },
+        }
+
+    RETURN_TYPES = ("MODEL", "CONDITIONING", "CONDITIONING")
+    FUNCTION = "apply_layered_diffusion"
+    CATEGORY = "layered_diffusion"
+
+    def __init__(self) -> None:
+        self.fg_cond = LayeredDiffusionBase(
+            model_file_name="layer_xl_fg2ble.safetensors",
+            model_url="https://huggingface.co/LayerDiffusion/layerdiffusion-v1/resolve/main/layer_xl_fg2ble.safetensors",
+        )
+        self.bg_cond = LayeredDiffusionBase(
+            model_file_name="layer_xl_bg2ble.safetensors",
+            model_url="https://huggingface.co/LayerDiffusion/layerdiffusion-v1/resolve/main/layer_xl_bg2ble.safetensors",
+        )
+
+    def apply_layered_diffusion(
+        self,
+        model: ModelPatcher,
+        cond,
+        uncond,
+        latent,
+        layer_type,
+        weight: float,
+    ):
+        layer_type = LayerType(layer_type)
+        if layer_type == LayerType.FG:
+            ld = self.fg_cond
+        elif layer_type == LayerType.BG:
+            ld = self.bg_cond
+
+        c_concat = model.model.latent_format.process_in(latent["samples"])
+        return ld.apply_layered_diffusion(model, weight) + ld.apply_c_concat(
+            cond, uncond, c_concat
+        )
 
 
 NODE_CLASS_MAPPINGS = {
-    "LayeredDiffusionApply": LayeredDiffusionApply,
+    "LayeredDiffusionApply": LayeredDiffusionFG,
+    "LayeredDiffusionCondApply": LayeredDiffusionCond,
     "LayeredDiffusionDecode": LayeredDiffusionDecode,
     "LayeredDiffusionDecodeRGBA": LayeredDiffusionDecodeRGBA,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
     "LayeredDiffusionApply": "Layer Diffusion Apply",
+    "LayeredDiffusionCondApply": "Layer Diffusion Cond Apply",
     "LayeredDiffusionDecode": "Layer Diffusion Decode",
     "LayeredDiffusionDecodeRGBA": "Layer Diffusion Decode (RGBA)",
 }
