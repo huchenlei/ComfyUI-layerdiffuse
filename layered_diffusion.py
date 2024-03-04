@@ -256,7 +256,10 @@ class LayeredDiffusionFG:
 
 
 class LayeredDiffusionCond:
-    """Generate foreground + background given background / foreground."""
+    """Generate foreground + background given background / foreground.
+    - FG => Blended
+    - BG => Blended
+    """
 
     @classmethod
     def INPUT_TYPES(s):
@@ -317,9 +320,79 @@ class LayeredDiffusionCond:
         )
 
 
+class LayeredDiffusionDiff:
+    """Extract FG/BG from blended image.
+    - Blended + FG => BG
+    - Blended + BG => FG
+    """
+
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "model": ("MODEL",),
+                "cond": ("CONDITIONING",),
+                "uncond": ("CONDITIONING",),
+                "blended_latent": ("LATENT",),
+                "latent": ("LATENT",),
+                "layer_type": (
+                    [
+                        LayerType.FG.value,
+                        LayerType.BG.value,
+                    ],
+                    {
+                        "default": LayerType.BG.value,
+                    },
+                ),
+                "weight": (
+                    "FLOAT",
+                    {"default": 1.0, "min": -1, "max": 3, "step": 0.05},
+                ),
+            },
+        }
+
+    RETURN_TYPES = ("MODEL", "CONDITIONING", "CONDITIONING")
+    FUNCTION = "apply_layered_diffusion"
+    CATEGORY = "layered_diffusion"
+
+    def __init__(self) -> None:
+        self.fg_diff = LayeredDiffusionBase(
+            model_file_name="layer_xl_fgble2bg.safetensors",
+            model_url="https://huggingface.co/LayerDiffusion/layerdiffusion-v1/resolve/main/layer_xl_fgble2bg.safetensors",
+        )
+        self.bg_diff = LayeredDiffusionBase(
+            model_file_name="layer_xl_bgble2fg.safetensors",
+            model_url="https://huggingface.co/LayerDiffusion/layerdiffusion-v1/resolve/main/layer_xl_bgble2fg.safetensors",
+        )
+
+    def apply_layered_diffusion(
+        self,
+        model: ModelPatcher,
+        cond,
+        uncond,
+        blended_latent,
+        latent,
+        layer_type,
+        weight: float,
+    ):
+        layer_type = LayerType(layer_type)
+        if layer_type == LayerType.FG:
+            ld = self.fg_diff
+        elif layer_type == LayerType.BG:
+            ld = self.bg_diff
+
+        c_concat = model.model.latent_format.process_in(
+            torch.cat([latent["samples"], blended_latent["samples"]], dim=1)
+        )
+        return ld.apply_layered_diffusion(model, weight) + ld.apply_c_concat(
+            cond, uncond, c_concat
+        )
+
+
 NODE_CLASS_MAPPINGS = {
     "LayeredDiffusionApply": LayeredDiffusionFG,
     "LayeredDiffusionCondApply": LayeredDiffusionCond,
+    "LayeredDiffusionDiffApply": LayeredDiffusionDiff,
     "LayeredDiffusionDecode": LayeredDiffusionDecode,
     "LayeredDiffusionDecodeRGBA": LayeredDiffusionDecodeRGBA,
 }
@@ -327,6 +400,7 @@ NODE_CLASS_MAPPINGS = {
 NODE_DISPLAY_NAME_MAPPINGS = {
     "LayeredDiffusionApply": "Layer Diffusion Apply",
     "LayeredDiffusionCondApply": "Layer Diffusion Cond Apply",
+    "LayeredDiffusionDiffApply": "Layer Diffusion Diff Apply",
     "LayeredDiffusionDecode": "Layer Diffusion Decode",
     "LayeredDiffusionDecodeRGBA": "Layer Diffusion Decode (RGBA)",
 }
