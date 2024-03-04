@@ -10,7 +10,6 @@ from comfy.utils import load_torch_file
 from comfy_extras.nodes_compositing import JoinImageWithAlpha
 from comfy.conds import CONDRegular
 from .lib_layerdiffusion.utils import (
-    rgba2rgbfp32,
     load_file_from_url,
     to_lora_patch_dict,
 )
@@ -51,7 +50,9 @@ def calculate_weight_adjust_channel(func):
                     )
                 ):
                     new_shape = [max(n, m) for n, m in zip(weight.shape, w1.shape)]
-                    print(f"Merged with {key} channel changed from {weight.shape} to {new_shape}")
+                    print(
+                        f"Merged with {key} channel changed from {weight.shape} to {new_shape}"
+                    )
                     new_diff = alpha * comfy.model_management.cast_to_device(
                         w1, weight.device, weight.dtype
                     )
@@ -78,23 +79,6 @@ def calculate_weight_adjust_channel(func):
 ModelPatcher.calculate_weight = calculate_weight_adjust_channel(
     ModelPatcher.calculate_weight
 )
-
-
-class RGBA2RBGfp32:
-    @classmethod
-    def INPUT_TYPES(s):
-        return {
-            "required": {
-                "image": ("IMAGE",),
-            },
-        }
-
-    RETURN_TYPES = ("IMAGE",)
-    FUNCTION = "rgb2rgb_fp32"
-    CATEGORY = "layered_diffusion"
-
-    def rgb2rgb_fp32(self, image):
-        return rgba2rgbfp32(image)
 
 
 class LayeredDiffusionDecode:
