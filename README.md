@@ -20,6 +20,13 @@ Blending given FG
 Blending given BG
 ![bg_cond](https://github.com/huchenlei/ComfyUI-layerdiffusion/assets/20929282/e3a79218-6123-453b-a54b-2f338db1c12d)
 
+### Extract FG from Blended + BG
+![diff_bg](https://github.com/huchenlei/ComfyUI-layerdiffusion/assets/20929282/45c7207d-72ff-4fb0-9c91-687040781837)
+
+### Extract BG from Blended + FG
+[Forge impl's sanity check](https://github.com/layerdiffusion/sd-forge-layerdiffusion#sanity-check) sets `Stop at` to 0.5 to get better quality BG.
+This workflow might be inferior comparing to other object removal workflows.
+![diff_fg](https://github.com/huchenlei/ComfyUI-layerdiffusion/assets/20929282/05a10add-68b0-473a-acee-5853e4720322)
 
 ## Note
 - Currently only SDXL is supported. See https://github.com/layerdiffusion/sd-forge-layerdiffusion#model-notes for more details.
@@ -27,5 +34,6 @@ Blending given BG
 ## TODO
 - [x] Foreground conditioning
 - [x] Background conditioning
-- [ ] Blended + foreground => background
-- [ ] Blended + background => foreground
+- [x] Blended + foreground => background
+- [x] Blended + background => foreground
+- [ ] Support `Stop at` param
