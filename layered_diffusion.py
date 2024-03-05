@@ -6,6 +6,7 @@ import functools
 import folder_paths
 import comfy.model_management
 from comfy.model_patcher import ModelPatcher
+from folder_paths import get_folder_paths
 from comfy.utils import load_torch_file
 from comfy_extras.nodes_compositing import JoinImageWithAlpha
 from comfy.conds import CONDRegular
@@ -15,8 +16,10 @@ from .lib_layerdiffusion.utils import (
 )
 from .lib_layerdiffusion.models import TransparentVAEDecoder
 
-
-layer_model_root = os.path.join(folder_paths.models_dir, "layer_model")
+if 'layer_model' in folder_paths.folder_names_and_paths:
+    layer_model_root = get_folder_paths("layer_model")[0]
+else:
+    layer_model_root = os.path.join(folder_paths.models_dir, "layer_model")
 load_layer_model_state_dict = load_torch_file
 
 
