@@ -36,6 +36,14 @@ Blending given BG
 This workflow might be inferior comparing to other object removal workflows.
 ![diff_fg](https://github.com/huchenlei/ComfyUI-layerdiffuse/assets/20929282/05a10add-68b0-473a-acee-5853e4720322)
 
+### [Extract BG from Blended + FG (Stop at 0.5)](https://github.com/huchenlei/ComfyUI-layerdiffuse/blob/main/examples/layer_diffusion_diff_bg_stop_at.json)
+In [SD Forge impl](https://github.com/layerdiffuse/sd-forge-layerdiffuse), there is a `stop at` param that determines when
+layer diffuse should stop in the denosing process. In the background, what this param does is unapply the LoRA and c_concat cond after a certain step
+threshold. This is hard/risky to implement directly in ComfyUI as it requires manually load a model that has every changes except the layer diffusion
+change applied. A workaround in ComfyUI is to have another img2img pass on the layer diffuse result to simulate the effect of `stop at` param.
+![diff_fg_stop_at](https://github.com/huchenlei/ComfyUI-layerdiffuse/assets/20929282/e383c9d3-2d47-40c2-b764-b0bd48243ee8)
+
+
 ### [Generate FG from BG combined](https://github.com/huchenlei/ComfyUI-layerdiffuse/blob/main/examples/layer_diffusion_cond_fg_all.json)
 Combines previous workflows to generate blended and FG given BG. We found that there are some color variations in the extracted FG. Need to confirm
 with layer diffusion authors on whether this is expected.
@@ -49,4 +57,3 @@ with layer diffusion authors on whether this is expected.
 - [x] Background conditioning
 - [x] Blended + foreground => background
 - [x] Blended + background => foreground
-- [ ] Support `Stop at` param
