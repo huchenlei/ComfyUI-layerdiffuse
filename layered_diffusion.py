@@ -16,7 +16,7 @@ from .lib_layerdiffusion.utils import (
 )
 from .lib_layerdiffusion.models import TransparentVAEDecoder
 
-if 'layer_model' in folder_paths.folder_names_and_paths:
+if "layer_model" in folder_paths.folder_names_and_paths:
     layer_model_root = get_folder_paths("layer_model")[0]
 else:
     layer_model_root = os.path.join(folder_paths.models_dir, "layer_model")
