@@ -385,9 +385,9 @@ NODE_CLASS_MAPPINGS = {
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "LayeredDiffusionApply": "Layer Diffusion Apply",
-    "LayeredDiffusionCondApply": "Layer Diffusion Cond Apply",
-    "LayeredDiffusionDiffApply": "Layer Diffusion Diff Apply",
-    "LayeredDiffusionDecode": "Layer Diffusion Decode",
-    "LayeredDiffusionDecodeRGBA": "Layer Diffusion Decode (RGBA)",
+    "LayeredDiffusionApply": "Layer Diffuse Apply",
+    "LayeredDiffusionCondApply": "Layer Diffuse Cond Apply",
+    "LayeredDiffusionDiffApply": "Layer Diffuse Diff Apply",
+    "LayeredDiffusionDecode": "Layer Diffuse Decode",
+    "LayeredDiffusionDecodeRGBA": "Layer Diffuse Decode (RGBA)",
 }
