@@ -93,13 +93,13 @@ class LayeredDiffusionDecode:
 
     @classmethod
     def INPUT_TYPES(s):
-        return {"required": 
-                {
-                "samples": ("LATENT",), 
+        return {
+            "required": {
+                "samples": ("LATENT",),
                 "images": ("IMAGE",),
-                "per_batch": ("INT", {"default": 16, "min": 1, "max": 4096, "step": 1}),
-                },
-            }
+                "sub_batch_size": ("INT", {"default": 16, "min": 1, "max": 4096, "step": 1}),
+            },
+        }
 
     RETURN_TYPES = ("IMAGE", "MASK")
     FUNCTION = "decode"
@@ -108,7 +108,12 @@ class LayeredDiffusionDecode:
     def __init__(self) -> None:
         self.vae_transparent_decoder = None
 
-    def decode(self, samples, images, per_batch):    
+    def decode(self, samples, images, sub_batch_size: int):
+        """
+        sub_batch_size: How many images to decode in a single pass.
+        See https://github.com/huchenlei/ComfyUI-layerdiffuse/pull/4 for more
+        context.
+        """
         if self.vae_transparent_decoder is None:
             model_path = load_file_from_url(
                 url="https://huggingface.co/LayerDiffusion/layerdiffusion-v1/resolve/main/vae_transparent_decoder.safetensors",
@@ -126,15 +131,20 @@ class LayeredDiffusionDecode:
             )
         pixel = images.movedim(-1, 1)  # [B, H, W, C] => [B, C, H, W]
         decoded = []
-        for start_idx in range(0, samples["samples"].shape[0], per_batch):
-            decoded.append(self.vae_transparent_decoder.decode_pixel(pixel[start_idx:start_idx+per_batch], samples["samples"][start_idx:start_idx+per_batch]))
+        for start_idx in range(0, samples["samples"].shape[0], sub_batch_size):
+            decoded.append(
+                self.vae_transparent_decoder.decode_pixel(
+                    pixel[start_idx : start_idx + sub_batch_size],
+                    samples["samples"][start_idx : start_idx + sub_batch_size],
+                )
+            )
         pixel_with_alpha = torch.cat(decoded, dim=0)
-        
+
         # [B, C, H, W] => [B, H, W, C]
         pixel_with_alpha = pixel_with_alpha.movedim(1, -1)
         image = pixel_with_alpha[..., 1:]
         alpha = pixel_with_alpha[..., 0]
-        return (image, alpha,)
+        return (image, alpha)
 
 
 class LayeredDiffusionDecodeRGBA(LayeredDiffusionDecode):
@@ -146,8 +156,8 @@ class LayeredDiffusionDecodeRGBA(LayeredDiffusionDecode):
 
     RETURN_TYPES = ("IMAGE",)
 
-    def decode(self, samples, images):
-        image, mask = super().decode(samples, images)
+    def decode(self, samples, images, sub_batch_size: int):
+        image, mask = super().decode(samples, images, sub_batch_size)
         alpha = 1.0 - mask
         return JoinImageWithAlpha().join_image_with_alpha(image, alpha)
 
