@@ -53,7 +53,8 @@ def crop_and_resize_image(detected_map, resize_mode, h, w):
     k0 = float(h) / old_h
     k1 = float(w) / old_w
 
-    safeint = lambda x: int(np.round(x))
+    def safeint(x):
+        return int(np.round(x))
 
     if resize_mode == ResizeMode.RESIZE_AND_FILL:
         k = min(k0, k1)

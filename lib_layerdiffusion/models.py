@@ -2,7 +2,6 @@ import torch.nn as nn
 import torch
 import cv2
 import numpy as np
-import functools
 
 from tqdm import tqdm
 from typing import Optional, Tuple
