@@ -1,0 +1,77 @@
+name: Bug Report
+description: You think something is broken in the UI
+title: "[Bug]: "
+labels: ["bug-report"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        > The title of the bug report should be short and descriptive.
+        > Use relevant keywords for searchability.
+        > Do not leave it blank, but also do not put an entire error log in it.
+  - type: textarea
+    id: what-did
+    attributes:
+      label: What happened?
+      description: Tell us what happened in a very clear and simple way
+      placeholder: |
+        txt2img is not working as intended.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce the problem
+      description: Please provide us with precise step by step instructions on how to reproduce the bug
+      placeholder: |
+        1. Go to ...
+        2. Press ...
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: what-should
+    attributes:
+      label: What should have happened?
+      description: Tell us what you think the normal behavior should be
+      placeholder: |
+        ComfyUI should ...
+    validations:
+      required: true
+  - type: textarea
+    id: commits
+    attributes:
+      label: Commit where the problem happens
+      description: Which commit of the extension are you running on? Please include the commit of both the extension and the ComfyUI (Do not write *Latest version/repo/commit*, as this means nothing and will have changed by the time we read your issue. Rather, copy the **Commit** link at the bottom of the UI, or from the cmd/terminal if you can't launch it.)
+      value: |
+        ComfyUI:
+        ComfyUI-layerdiffuse:
+    validations:
+      required: true
+  - type: textarea
+    id: sysinfo
+    attributes:
+      label: Sysinfo
+      description: The system information
+      placeholder: |
+        OS:
+        Graphics Card: Nvidia/AMD/Intel
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Console logs
+      description: Please provide **full** cmd/terminal logs from the moment you started UI to the end of it, after the bug occured. If it's very long, provide a link to pastebin or similar service.
+      render: Shell
+    validations:
+      required: true
+  - type: textarea
+    id: misc
+    attributes:
+      label: Additional information
+      description: |
+        Please provide us with any relevant additional info or context.
+        Examples:
+        　I have updated my GPU driver recently.
