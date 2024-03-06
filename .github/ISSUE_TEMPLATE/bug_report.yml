@@ -68,6 +68,13 @@ body:
     validations:
       required: true
   - type: textarea
+    id: workflow
+    attributes:
+      label: Workflow json file
+      description: Please provide the minimal workflow json file to reproduce the issue.
+    validations:
+      required: true
+  - type: textarea
     id: misc
     attributes:
       label: Additional information
