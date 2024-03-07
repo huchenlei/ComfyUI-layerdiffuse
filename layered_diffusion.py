@@ -34,8 +34,9 @@ def calculate_weight_adjust_channel(func):
             alpha = p[0]
             v = p[1]
 
+            # The recursion call should be handled in the main func call.
             if isinstance(v, list):
-                v = (func(self, v[1:], v[0].clone(), key),)
+                continue
 
             if len(v) == 1:
                 patch_type = "diff"
