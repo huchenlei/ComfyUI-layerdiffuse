@@ -4,7 +4,7 @@ import torch
 import einops
 
 from comfy import model_management, utils
-from comfy.ldm.modules import optimized_attention
+from comfy.ldm.modules.attention import optimized_attention
 
 
 module_mapping_sd15 = {
@@ -168,9 +168,12 @@ class AttentionSharingUnit(torch.nn.Module):
                 context, "(b f) d c -> f b d c", f=self.frames
             )
 
-        framed_cond_mark = einops.rearrange(
-            transformer_options["cond_mark"], "(b f) -> f b", f=self.frames
-        ).to(modified_hidden_states)
+        # Shape = [self.frames, 2 or 1]
+        framed_cond_mark = (
+            torch.Tensor(transformer_options["cond_or_uncond"])
+            .unsqueeze(0)
+            .repeat(self.frames, 1)
+        )
 
         attn_outs = []
         for f in range(self.frames):

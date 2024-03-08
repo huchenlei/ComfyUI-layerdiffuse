@@ -2,9 +2,13 @@ import os
 from enum import Enum
 import torch
 import functools
+from typing import Optional
 
 import folder_paths
 import comfy.model_management
+import comfy.model_base
+import comfy.supported_models
+import comfy.supported_models_base
 from comfy.model_patcher import ModelPatcher
 from folder_paths import get_folder_paths
 from comfy.utils import load_torch_file
@@ -15,6 +19,7 @@ from .lib_layerdiffusion.utils import (
     to_lora_patch_dict,
 )
 from .lib_layerdiffusion.models import TransparentVAEDecoder
+from .lib_layerdiffusion.attention_sharing import AttentionSharingPatcher
 from .lib_layerdiffusion.enums import StableDiffusionVersion
 
 if "layer_model" in folder_paths.folder_names_and_paths:
@@ -24,7 +29,10 @@ else:
 load_layer_model_state_dict = load_torch_file
 
 
+# ------------ Start patching ComfyUI ------------
 def calculate_weight_adjust_channel(func):
+    """Patches ComfyUI's LoRA weight application to accept multi-channel inputs."""
+
     @functools.wraps(func)
     def calculate_weight(
         self: ModelPatcher, patches, weight: torch.Tensor, key: str
@@ -84,6 +92,8 @@ def calculate_weight_adjust_channel(func):
 ModelPatcher.calculate_weight = calculate_weight_adjust_channel(
     ModelPatcher.calculate_weight
 )
+
+# ------------ End patching ComfyUI ------------
 
 
 class LayeredDiffusionDecode:
@@ -235,6 +245,43 @@ class LayeredDiffusionBase:
         work_model.add_patches(layer_lora_patch_dict, weight)
         return (work_model,)
 
+    def apply_layered_diffusion_attn_sharing(
+        self,
+        model: ModelPatcher,
+        frames: int = 1,
+        control_img: Optional[torch.TensorType] = None,
+    ):
+        """Patch model with attn sharing"""
+        model_path = load_file_from_url(
+            url=self.model_url,
+            model_dir=layer_model_root,
+            file_name=self.model_file_name,
+        )
+        layer_lora_state_dict = load_layer_model_state_dict(model_path)
+        work_model = model.clone()
+        patcher = AttentionSharingPatcher(
+            work_model, frames, use_control=control_img is not None
+        )
+        patcher.load_state_dict(layer_lora_state_dict, strict=True)
+        if control_img:
+            patcher.set_control(control_img)
+        return (work_model,)
+
+
+def get_model_sd_version(model: ModelPatcher) -> StableDiffusionVersion:
+    """Get model's StableDiffusionVersion."""
+    base: comfy.model_base.BaseModel = model.model
+    model_config: comfy.supported_models.supported_models_base.BASE = base.model_config
+    if isinstance(model_config, comfy.supported_models.SDXL):
+        return StableDiffusionVersion.SDXL
+    elif isinstance(
+        model_config, (comfy.supported_models.SD15, comfy.supported_models.SD20)
+    ):
+        # SD15 and SD20 are compatible with each other.
+        return StableDiffusionVersion.SD1x
+    else:
+        raise Exception(f"Unsupported SD Version: {type(model_config)}.")
+
 
 class LayeredDiffusionFG:
     """Generate foreground with transparent background."""
@@ -265,14 +312,24 @@ class LayeredDiffusionFG:
     CATEGORY = "layered_diffusion"
 
     def __init__(self) -> None:
-        self.fg_attn = LayeredDiffusionBase(
-            model_file_name="layer_xl_transparent_attn.safetensors",
-            model_url="https://huggingface.co/LayerDiffusion/layerdiffusion-v1/resolve/main/layer_xl_transparent_attn.safetensors",
-        )
-        self.fg_conv = LayeredDiffusionBase(
-            model_file_name="layer_xl_transparent_conv.safetensors",
-            model_url="https://huggingface.co/LayerDiffusion/layerdiffusion-v1/resolve/main/layer_xl_transparent_conv.safetensors",
-        )
+        self.models = {
+            StableDiffusionVersion.SDXL: {
+                LayerMethod.ATTN: LayeredDiffusionBase(
+                    model_file_name="layer_xl_transparent_attn.safetensors",
+                    model_url="https://huggingface.co/LayerDiffusion/layerdiffusion-v1/resolve/main/layer_xl_transparent_attn.safetensors",
+                ),
+                LayerMethod.CONV: LayeredDiffusionBase(
+                    model_file_name="layer_xl_transparent_conv.safetensors",
+                    model_url="https://huggingface.co/LayerDiffusion/layerdiffusion-v1/resolve/main/layer_xl_transparent_conv.safetensors",
+                ),
+            },
+            StableDiffusionVersion.SD1x: {
+                LayerMethod.ATTN: LayeredDiffusionBase(
+                    model_file_name="layer_sd15_transparent_attn.safetensors",
+                    model_url="https://huggingface.co/LayerDiffusion/layerdiffusion-v1/resolve/main/layer_sd15_transparent_attn.safetensors",
+                ),
+            },
+        }
 
     def apply_layered_diffusion(
         self,
@@ -281,10 +338,19 @@ class LayeredDiffusionFG:
         weight: float,
     ):
         method = LayerMethod(method)
-        if method == LayerMethod.ATTN:
-            return self.fg_attn.apply_layered_diffusion(model, weight)
-        if method == LayerMethod.CONV:
-            return self.fg_conv.apply_layered_diffusion(model, weight)
+        sd_version = get_model_sd_version(model)
+
+        ld_models_by_method = self.models.get(sd_version)
+        assert ld_models_by_method is not None, f"Unsupported sd version {sd_version}."
+        ld_model = ld_models_by_method.get(method)
+        assert ld_model is not None, f"Unsupported method {method} for {sd_version}."
+
+        # For SD15, use attn sharing.
+        if sd_version == StableDiffusionVersion.SD1x:
+            print("[LayerDiffuse] weight is ignored in attn sharing.")
+            return ld_model.apply_layered_diffusion_attn_sharing(model)
+        else:
+            return ld_model.apply_layered_diffusion(model, weight)
 
 
 class LayeredDiffusionCond:
