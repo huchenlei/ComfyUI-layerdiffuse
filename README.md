@@ -51,6 +51,8 @@ with layer diffusion authors on whether this is expected.
 
 ## Note
 - Currently only SDXL is supported. See https://github.com/layerdiffuse/sd-forge-layerdiffuse#model-notes for more details.
+- To decode RGBA result, the generation dimension must be multiple of 64. Otherwise, you will get decode error: ![image](https://github.com/huchenlei/ComfyUI-layerdiffuse/assets/20929282/ff055f99-9297-4ff1-9a33-065aaadcf98e)
+
 
 ## TODO
 - [x] Foreground conditioning
