@@ -10,6 +10,18 @@ from diffusers.models.modeling_utils import ModelMixin
 from diffusers.models.unet_2d_blocks import UNetMidBlock2D, get_down_block, get_up_block
 
 
+def check_diffusers_version():
+    import diffusers
+    from packaging.version import parse
+
+    assert parse(diffusers.__version__) >= parse(
+        "0.25.0"
+    ), "diffusers>=0.25.0 requirement not satisfied. Please install correct diffusers version."
+
+
+check_diffusers_version()
+
+
 def zero_module(module):
     """
     Zero out the parameters of a module and return it.
