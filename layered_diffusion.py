@@ -98,7 +98,10 @@ class LayeredDiffusionDecode:
             "required": {
                 "samples": ("LATENT",),
                 "images": ("IMAGE",),
-                "sub_batch_size": ("INT", {"default": 16, "min": 1, "max": 4096, "step": 1}),
+                "sub_batch_size": (
+                    "INT",
+                    {"default": 16, "min": 1, "max": 4096, "step": 1},
+                ),
             },
         }
 
@@ -131,6 +134,12 @@ class LayeredDiffusionDecode:
                 ),
             )
         pixel = images.movedim(-1, 1)  # [B, H, W, C] => [B, C, H, W]
+
+        # Decoder requires dimension to be 64-aligned.
+        B, C, H, W = pixel.shape
+        assert H % 64 == 0, f"Height({H}) is not multiple of 64."
+        assert W % 64 == 0, f"Height({W}) is not multiple of 64."
+
         decoded = []
         for start_idx in range(0, samples["samples"].shape[0], sub_batch_size):
             decoded.append(
