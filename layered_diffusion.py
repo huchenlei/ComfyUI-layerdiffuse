@@ -15,6 +15,7 @@ from .lib_layerdiffusion.utils import (
     to_lora_patch_dict,
 )
 from .lib_layerdiffusion.models import TransparentVAEDecoder
+from .lib_layerdiffusion.enums import StableDiffusionVersion
 
 if "layer_model" in folder_paths.folder_names_and_paths:
     layer_model_root = get_folder_paths("layer_model")[0]
@@ -98,6 +99,15 @@ class LayeredDiffusionDecode:
             "required": {
                 "samples": ("LATENT",),
                 "images": ("IMAGE",),
+                "sd_version": (
+                    [
+                        StableDiffusionVersion.SD1x.value,
+                        StableDiffusionVersion.SDXL.value,
+                    ],
+                    {
+                        "default": StableDiffusionVersion.SDXL.value,
+                    },
+                ),
                 "sub_batch_size": (
                     "INT",
                     {"default": 16, "min": 1, "max": 4096, "step": 1},
@@ -110,21 +120,27 @@ class LayeredDiffusionDecode:
     CATEGORY = "layered_diffusion"
 
     def __init__(self) -> None:
-        self.vae_transparent_decoder = None
+        self.vae_transparent_decoder = {}
 
-    def decode(self, samples, images, sub_batch_size: int):
+    def decode(self, samples, images, sd_version: str, sub_batch_size: int):
         """
         sub_batch_size: How many images to decode in a single pass.
         See https://github.com/huchenlei/ComfyUI-layerdiffuse/pull/4 for more
         context.
         """
-        if self.vae_transparent_decoder is None:
+        sd_version = StableDiffusionVersion(sd_version)
+        if sd_version == StableDiffusionVersion.SD1x:
+            url = "https://huggingface.co/LayerDiffusion/layerdiffusion-v1/resolve/main/layer_sd15_vae_transparent_decoder.safetensors"
+            file_name = "layer_sd15_vae_transparent_decoder.safetensors"
+        elif sd_version == StableDiffusionVersion.SDXL:
+            url = "https://huggingface.co/LayerDiffusion/layerdiffusion-v1/resolve/main/vae_transparent_decoder.safetensors"
+            file_name = "vae_transparent_decoder.safetensors"
+
+        if not self.vae_transparent_decoder.get(sd_version):
             model_path = load_file_from_url(
-                url="https://huggingface.co/LayerDiffusion/layerdiffusion-v1/resolve/main/vae_transparent_decoder.safetensors",
-                model_dir=layer_model_root,
-                file_name="vae_transparent_decoder.safetensors",
+                url=url, model_dir=layer_model_root, file_name=file_name
             )
-            self.vae_transparent_decoder = TransparentVAEDecoder(
+            self.vae_transparent_decoder[sd_version] = TransparentVAEDecoder(
                 load_torch_file(model_path),
                 device=comfy.model_management.get_torch_device(),
                 dtype=(
@@ -143,7 +159,7 @@ class LayeredDiffusionDecode:
         decoded = []
         for start_idx in range(0, samples["samples"].shape[0], sub_batch_size):
             decoded.append(
-                self.vae_transparent_decoder.decode_pixel(
+                self.vae_transparent_decoder[sd_version].decode_pixel(
                     pixel[start_idx : start_idx + sub_batch_size],
                     samples["samples"][start_idx : start_idx + sub_batch_size],
                 )
