@@ -3,6 +3,7 @@ from enum import Enum
 import torch
 import functools
 from typing import Optional
+from dataclasses import dataclass
 
 import folder_paths
 import comfy.model_management
@@ -208,10 +209,34 @@ class LayerType(Enum):
     BG = "Background"
 
 
+@dataclass
 class LayeredDiffusionBase:
-    def __init__(self, model_file_name: str, model_url: str) -> None:
-        self.model_file_name = model_file_name
-        self.model_url = model_url
+    model_file_name: str
+    model_url: str
+    sd_version: StableDiffusionVersion
+    attn_sharing: bool = False
+    injection_method: Optional[LayerMethod] = None
+    cond_type: Optional[LayerType] = None
+    # Number of output images per run.
+    frames: int = 1
+
+    @property
+    def config_string(self) -> str:
+        injection_method = self.injection_method.value if self.injection_method else ""
+        cond_type = self.cond_type.value if self.cond_type else ""
+        attn_sharing = "attn_sharing" if self.attn_sharing else ""
+        frames = f"Batch size ({self.frames}N)" if self.frames != 1 else ""
+        return ", ".join(
+            x
+            for x in (
+                self.sd_version.value,
+                injection_method,
+                cond_type,
+                attn_sharing,
+                frames,
+            )
+            if x
+        )
 
     def apply_c_concat(self, cond, uncond, c_concat):
         """Set foreground/background concat condition."""
@@ -248,7 +273,6 @@ class LayeredDiffusionBase:
     def apply_layered_diffusion_attn_sharing(
         self,
         model: ModelPatcher,
-        frames: int = 1,
         control_img: Optional[torch.TensorType] = None,
     ):
         """Patch model with attn sharing"""
@@ -260,7 +284,7 @@ class LayeredDiffusionBase:
         layer_lora_state_dict = load_layer_model_state_dict(model_path)
         work_model = model.clone()
         patcher = AttentionSharingPatcher(
-            work_model, frames, use_control=control_img is not None
+            work_model, self.frames, use_control=control_img is not None
         )
         patcher.load_state_dict(layer_lora_state_dict, strict=True)
         if control_img:
@@ -291,15 +315,7 @@ class LayeredDiffusionFG:
         return {
             "required": {
                 "model": ("MODEL",),
-                "method": (
-                    [
-                        LayerMethod.ATTN.value,
-                        LayerMethod.CONV.value,
-                    ],
-                    {
-                        "default": LayerMethod.ATTN.value,
-                    },
-                ),
+                "config": ([c.config_string for c in s.MODELS],),
                 "weight": (
                     "FLOAT",
                     {"default": 1.0, "min": -1, "max": 3, "step": 0.05},
@@ -310,44 +326,39 @@ class LayeredDiffusionFG:
     RETURN_TYPES = ("MODEL",)
     FUNCTION = "apply_layered_diffusion"
     CATEGORY = "layered_diffusion"
-
-    def __init__(self) -> None:
-        self.models = {
-            StableDiffusionVersion.SDXL: {
-                LayerMethod.ATTN: LayeredDiffusionBase(
-                    model_file_name="layer_xl_transparent_attn.safetensors",
-                    model_url="https://huggingface.co/LayerDiffusion/layerdiffusion-v1/resolve/main/layer_xl_transparent_attn.safetensors",
-                ),
-                LayerMethod.CONV: LayeredDiffusionBase(
-                    model_file_name="layer_xl_transparent_conv.safetensors",
-                    model_url="https://huggingface.co/LayerDiffusion/layerdiffusion-v1/resolve/main/layer_xl_transparent_conv.safetensors",
-                ),
-            },
-            StableDiffusionVersion.SD1x: {
-                LayerMethod.ATTN: LayeredDiffusionBase(
-                    model_file_name="layer_sd15_transparent_attn.safetensors",
-                    model_url="https://huggingface.co/LayerDiffusion/layerdiffusion-v1/resolve/main/layer_sd15_transparent_attn.safetensors",
-                ),
-            },
-        }
+    MODELS = (
+        LayeredDiffusionBase(
+            model_file_name="layer_xl_transparent_attn.safetensors",
+            model_url="https://huggingface.co/LayerDiffusion/layerdiffusion-v1/resolve/main/layer_xl_transparent_attn.safetensors",
+            sd_version=StableDiffusionVersion.SDXL,
+            injection_method=LayerMethod.ATTN,
+        ),
+        LayeredDiffusionBase(
+            model_file_name="layer_xl_transparent_conv.safetensors",
+            model_url="https://huggingface.co/LayerDiffusion/layerdiffusion-v1/resolve/main/layer_xl_transparent_conv.safetensors",
+            sd_version=StableDiffusionVersion.SDXL,
+            injection_method=LayerMethod.CONV,
+        ),
+        LayeredDiffusionBase(
+            model_file_name="layer_sd15_transparent_attn.safetensors",
+            model_url="https://huggingface.co/LayerDiffusion/layerdiffusion-v1/resolve/main/layer_sd15_transparent_attn.safetensors",
+            sd_version=StableDiffusionVersion.SD1x,
+            injection_method=LayerMethod.ATTN,
+            attn_sharing=True,
+        ),
+    )
 
     def apply_layered_diffusion(
         self,
         model: ModelPatcher,
-        method: str,
+        config: str,
         weight: float,
     ):
-        method = LayerMethod(method)
-        sd_version = get_model_sd_version(model)
-
-        ld_models_by_method = self.models.get(sd_version)
-        assert ld_models_by_method is not None, f"Unsupported sd version {sd_version}."
-        ld_model = ld_models_by_method.get(method)
-        assert ld_model is not None, f"Unsupported method {method} for {sd_version}."
-
-        # For SD15, use attn sharing.
-        if sd_version == StableDiffusionVersion.SD1x:
-            print("[LayerDiffuse] weight is ignored in attn sharing.")
+        ld_model = [m for m in LayeredDiffusionFG.MODELS if m.config_string == config][
+            0
+        ]
+        assert get_model_sd_version(model) == ld_model.sd_version
+        if ld_model.attn_sharing:
             return ld_model.apply_layered_diffusion_attn_sharing(model)
         else:
             return ld_model.apply_layered_diffusion(model, weight)
@@ -391,10 +402,14 @@ class LayeredDiffusionCond:
         self.fg_cond = LayeredDiffusionBase(
             model_file_name="layer_xl_fg2ble.safetensors",
             model_url="https://huggingface.co/LayerDiffusion/layerdiffusion-v1/resolve/main/layer_xl_fg2ble.safetensors",
+            sd_version=StableDiffusionVersion.SDXL,
+            cond_type=LayerType.FG,
         )
         self.bg_cond = LayeredDiffusionBase(
             model_file_name="layer_xl_bg2ble.safetensors",
             model_url="https://huggingface.co/LayerDiffusion/layerdiffusion-v1/resolve/main/layer_xl_bg2ble.safetensors",
+            sd_version=StableDiffusionVersion.SDXL,
+            cond_type=LayerType.BG,
         )
 
     def apply_layered_diffusion(
@@ -457,10 +472,14 @@ class LayeredDiffusionDiff:
         self.fg_diff = LayeredDiffusionBase(
             model_file_name="layer_xl_fgble2bg.safetensors",
             model_url="https://huggingface.co/LayerDiffusion/layerdiffusion-v1/resolve/main/layer_xl_fgble2bg.safetensors",
+            sd_version=StableDiffusionVersion.SDXL,
+            cond_type=LayerType.FG,
         )
         self.bg_diff = LayeredDiffusionBase(
             model_file_name="layer_xl_bgble2fg.safetensors",
             model_url="https://huggingface.co/LayerDiffusion/layerdiffusion-v1/resolve/main/layer_xl_bgble2fg.safetensors",
+            sd_version=StableDiffusionVersion.SDXL,
+            cond_type=LayerType.BG,
         )
 
     def apply_layered_diffusion(
