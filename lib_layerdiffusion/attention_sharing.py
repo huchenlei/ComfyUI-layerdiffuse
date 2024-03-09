@@ -1,5 +1,6 @@
 # Currently only sd15
 
+import functools
 import torch
 import einops
 
@@ -71,6 +72,10 @@ class LoRALinearLayer(torch.nn.Module):
 
 
 class AttentionSharingUnit(torch.nn.Module):
+    # `transformer_options` passed to the most recent BasicTransformerBlock.forward
+    # call.
+    transformer_options: dict = {}
+
     def __init__(self, module, frames=2, use_control=True, rank=256):
         super().__init__()
 
@@ -152,7 +157,9 @@ class AttentionSharingUnit(torch.nn.Module):
 
         self.control_signals = None
 
-    def forward(self, h, context=None, value=None, transformer_options={}):
+    def forward(self, h, context=None, value=None):
+        transformer_options = self.transformer_options
+
         modified_hidden_states = einops.rearrange(
             h, "(b f) d c -> f b d c", f=self.frames
         )
@@ -236,6 +243,25 @@ class AttentionSharingUnit(torch.nn.Module):
         modified_hidden_states = modified_hidden_states + x
 
         return modified_hidden_states - h
+
+    @classmethod
+    def hijack_transformer_block(cls):
+        def register_get_transformer_options(func):
+            @functools.wraps(func)
+            def forward(self, x, context=None, transformer_options={}):
+                cls.transformer_options = transformer_options
+                return func(self, x, context, transformer_options)
+
+            return forward
+
+        from comfy.ldm.modules.attention import BasicTransformerBlock
+
+        BasicTransformerBlock.forward = register_get_transformer_options(
+            BasicTransformerBlock.forward
+        )
+
+
+AttentionSharingUnit.hijack_transformer_block()
 
 
 class AdditionalAttentionCondsEncoder(torch.nn.Module):
