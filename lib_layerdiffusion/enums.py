@@ -14,3 +14,10 @@ class ResizeMode(Enum):
         elif self == ResizeMode.RESIZE_AND_FILL:
             return 2
         return 0
+
+
+class StableDiffusionVersion(Enum):
+    """The version family of stable diffusion model."""
+
+    SD1x = "SD15"
+    SDXL = "SDXL"

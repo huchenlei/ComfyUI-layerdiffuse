@@ -324,89 +324,6 @@
       ]
     },
     {
-      "id": 37,
-      "type": "LayeredDiffusionDiffApply",
-      "pos": [
-        457,
-        -37
-      ],
-      "size": {
-        "0": 342.5999755859375,
-        "1": 162
-      },
-      "flags": {},
-      "order": 8,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "model",
-          "type": "MODEL",
-          "link": 55,
-          "slot_index": 0
-        },
-        {
-          "name": "cond",
-          "type": "CONDITIONING",
-          "link": 56,
-          "slot_index": 1
-        },
-        {
-          "name": "uncond",
-          "type": "CONDITIONING",
-          "link": 57,
-          "slot_index": 2
-        },
-        {
-          "name": "blended_latent",
-          "type": "LATENT",
-          "link": 60
-        },
-        {
-          "name": "latent",
-          "type": "LATENT",
-          "link": 61
-        }
-      ],
-      "outputs": [
-        {
-          "name": "MODEL",
-          "type": "MODEL",
-          "links": [
-            62
-          ],
-          "shape": 3,
-          "slot_index": 0
-        },
-        {
-          "name": "CONDITIONING",
-          "type": "CONDITIONING",
-          "links": [
-            63
-          ],
-          "shape": 3,
-          "slot_index": 1
-        },
-        {
-          "name": "CONDITIONING",
-          "type": "CONDITIONING",
-          "links": [
-            64
-          ],
-          "shape": 3,
-          "slot_index": 2
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "LayeredDiffusionDiffApply"
-      },
-      "widgets_values": [
-        "Background",
-        1
-      ],
-      "color": "#232",
-      "bgcolor": "#353"
-    },
-    {
       "id": 14,
       "type": "VAEDecode",
       "pos": [
@@ -509,16 +426,124 @@
       ]
     },
     {
+      "id": 20,
+      "type": "PreviewImage",
+      "pos": [
+        1800,
+        190
+      ],
+      "size": {
+        "0": 611.2340087890625,
+        "1": 633.9354858398438
+      },
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 66
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PreviewImage"
+      }
+    },
+    {
+      "id": 37,
+      "type": "LayeredDiffusionDiffApply",
+      "pos": [
+        457,
+        -37
+      ],
+      "size": {
+        "0": 342.5999755859375,
+        "1": 162
+      },
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 55,
+          "slot_index": 0
+        },
+        {
+          "name": "cond",
+          "type": "CONDITIONING",
+          "link": 56,
+          "slot_index": 1
+        },
+        {
+          "name": "uncond",
+          "type": "CONDITIONING",
+          "link": 57,
+          "slot_index": 2
+        },
+        {
+          "name": "blended_latent",
+          "type": "LATENT",
+          "link": 60
+        },
+        {
+          "name": "latent",
+          "type": "LATENT",
+          "link": 61
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            62
+          ],
+          "shape": 3,
+          "slot_index": 0
+        },
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            63
+          ],
+          "shape": 3,
+          "slot_index": 1
+        },
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            64
+          ],
+          "shape": 3,
+          "slot_index": 2
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LayeredDiffusionDiffApply"
+      },
+      "widgets_values": [
+        "SDXL, Background",
+        1
+      ],
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
       "id": 40,
       "type": "LayeredDiffusionDecodeRGBA",
       "pos": [
         1533,
         189
       ],
-      "size": [
-        243.60000610351562,
-        46.0354863281251
-      ],
+      "size": {
+        "0": 243.60000610351562,
+        "1": 102
+      },
       "flags": {},
       "order": 11,
       "mode": 0,
@@ -547,32 +572,13 @@
       ],
       "properties": {
         "Node name for S&R": "LayeredDiffusionDecodeRGBA"
-      }
-    },
-    {
-      "id": 20,
-      "type": "PreviewImage",
-      "pos": [
-        1800,
-        190
-      ],
-      "size": {
-        "0": 611.2340087890625,
-        "1": 633.9354858398438
       },
-      "flags": {},
-      "order": 12,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "images",
-          "type": "IMAGE",
-          "link": 66
-        }
+      "widgets_values": [
+        "SDXL",
+        16
       ],
-      "properties": {
-        "Node name for S&R": "PreviewImage"
-      }
+      "color": "#232",
+      "bgcolor": "#353"
     }
   ],
   "links": [

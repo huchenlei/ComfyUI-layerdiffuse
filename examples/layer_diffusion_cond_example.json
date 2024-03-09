@@ -259,81 +259,6 @@
       }
     },
     {
-      "id": 28,
-      "type": "LayeredDiffusionCondApply",
-      "pos": [
-        465,
-        -26
-      ],
-      "size": {
-        "0": 315,
-        "1": 142
-      },
-      "flags": {},
-      "order": 8,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "model",
-          "type": "MODEL",
-          "link": 38
-        },
-        {
-          "name": "cond",
-          "type": "CONDITIONING",
-          "link": 39
-        },
-        {
-          "name": "uncond",
-          "type": "CONDITIONING",
-          "link": 40
-        },
-        {
-          "name": "latent",
-          "type": "LATENT",
-          "link": 47
-        }
-      ],
-      "outputs": [
-        {
-          "name": "MODEL",
-          "type": "MODEL",
-          "links": [
-            41
-          ],
-          "shape": 3,
-          "slot_index": 0
-        },
-        {
-          "name": "CONDITIONING",
-          "type": "CONDITIONING",
-          "links": [
-            46
-          ],
-          "shape": 3,
-          "slot_index": 1
-        },
-        {
-          "name": "CONDITIONING",
-          "type": "CONDITIONING",
-          "links": [
-            45
-          ],
-          "shape": 3,
-          "slot_index": 2
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "LayeredDiffusionCondApply"
-      },
-      "widgets_values": [
-        "Background",
-        1
-      ],
-      "color": "#232",
-      "bgcolor": "#353"
-    },
-    {
       "id": 14,
       "type": "VAEDecode",
       "pos": [
@@ -425,7 +350,7 @@
         "Node name for S&R": "KSampler"
       },
       "widgets_values": [
-        512744791563487,
+        100676796092754,
         "randomize",
         20,
         8,
@@ -472,7 +397,7 @@
       "type": "ImageResize+",
       "pos": [
         -146,
-        -19
+        -16
       ],
       "size": {
         "0": 315,
@@ -521,6 +446,81 @@
         "nearest",
         false
       ]
+    },
+    {
+      "id": 28,
+      "type": "LayeredDiffusionCondApply",
+      "pos": [
+        465,
+        -26
+      ],
+      "size": {
+        "0": 315,
+        "1": 142
+      },
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 38
+        },
+        {
+          "name": "cond",
+          "type": "CONDITIONING",
+          "link": 39
+        },
+        {
+          "name": "uncond",
+          "type": "CONDITIONING",
+          "link": 40
+        },
+        {
+          "name": "latent",
+          "type": "LATENT",
+          "link": 47
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            41
+          ],
+          "shape": 3,
+          "slot_index": 0
+        },
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            46
+          ],
+          "shape": 3,
+          "slot_index": 1
+        },
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            45
+          ],
+          "shape": 3,
+          "slot_index": 2
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LayeredDiffusionCondApply"
+      },
+      "widgets_values": [
+        "SDXL, Background",
+        1
+      ],
+      "color": "#232",
+      "bgcolor": "#353"
     }
   ],
   "links": [
