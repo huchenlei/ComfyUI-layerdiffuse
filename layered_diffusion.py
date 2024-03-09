@@ -489,15 +489,7 @@ class LayeredDiffusionCond:
                 "cond": ("CONDITIONING",),
                 "uncond": ("CONDITIONING",),
                 "latent": ("LATENT",),
-                "layer_type": (
-                    [
-                        LayerType.FG.value,
-                        LayerType.BG.value,
-                    ],
-                    {
-                        "default": LayerType.BG.value,
-                    },
-                ),
+                "config": ([c.config_string for c in s.MODELS],),
                 "weight": (
                     "FLOAT",
                     {"default": 1.0, "min": -1, "max": 3, "step": 0.05},
@@ -508,20 +500,20 @@ class LayeredDiffusionCond:
     RETURN_TYPES = ("MODEL", "CONDITIONING", "CONDITIONING")
     FUNCTION = "apply_layered_diffusion"
     CATEGORY = "layer_diffuse"
-
-    def __init__(self) -> None:
-        self.fg_cond = LayeredDiffusionBase(
+    MODELS = (
+        LayeredDiffusionBase(
             model_file_name="layer_xl_fg2ble.safetensors",
             model_url="https://huggingface.co/LayerDiffusion/layerdiffusion-v1/resolve/main/layer_xl_fg2ble.safetensors",
             sd_version=StableDiffusionVersion.SDXL,
             cond_type=LayerType.FG,
-        )
-        self.bg_cond = LayeredDiffusionBase(
+        ),
+        LayeredDiffusionBase(
             model_file_name="layer_xl_bg2ble.safetensors",
             model_url="https://huggingface.co/LayerDiffusion/layerdiffusion-v1/resolve/main/layer_xl_bg2ble.safetensors",
             sd_version=StableDiffusionVersion.SDXL,
             cond_type=LayerType.BG,
-        )
+        ),
+    )
 
     def apply_layered_diffusion(
         self,
@@ -529,19 +521,15 @@ class LayeredDiffusionCond:
         cond,
         uncond,
         latent,
-        layer_type,
+        config: str,
         weight: float,
     ):
-        layer_type = LayerType(layer_type)
-        if layer_type == LayerType.FG:
-            ld = self.fg_cond
-        elif layer_type == LayerType.BG:
-            ld = self.bg_cond
-
+        ld_model = [m for m in self.MODELS if m.config_string == config][0]
+        assert get_model_sd_version(model) == ld_model.sd_version
         c_concat = model.model.latent_format.process_in(latent["samples"])
-        return ld.apply_layered_diffusion(model, weight) + ld.apply_c_concat(
-            cond, uncond, c_concat
-        )
+        return ld_model.apply_layered_diffusion(
+            model, weight
+        ) + ld_model.apply_c_concat(cond, uncond, c_concat)
 
 
 class LayeredDiffusionCondJoint:
@@ -626,15 +614,7 @@ class LayeredDiffusionDiff:
                 "uncond": ("CONDITIONING",),
                 "blended_latent": ("LATENT",),
                 "latent": ("LATENT",),
-                "layer_type": (
-                    [
-                        LayerType.FG.value,
-                        LayerType.BG.value,
-                    ],
-                    {
-                        "default": LayerType.BG.value,
-                    },
-                ),
+                "config": ([c.config_string for c in s.MODELS],),
                 "weight": (
                     "FLOAT",
                     {"default": 1.0, "min": -1, "max": 3, "step": 0.05},
@@ -645,20 +625,20 @@ class LayeredDiffusionDiff:
     RETURN_TYPES = ("MODEL", "CONDITIONING", "CONDITIONING")
     FUNCTION = "apply_layered_diffusion"
     CATEGORY = "layer_diffuse"
-
-    def __init__(self) -> None:
-        self.fg_diff = LayeredDiffusionBase(
+    MODELS = (
+        LayeredDiffusionBase(
             model_file_name="layer_xl_fgble2bg.safetensors",
             model_url="https://huggingface.co/LayerDiffusion/layerdiffusion-v1/resolve/main/layer_xl_fgble2bg.safetensors",
             sd_version=StableDiffusionVersion.SDXL,
             cond_type=LayerType.FG,
-        )
-        self.bg_diff = LayeredDiffusionBase(
+        ),
+        LayeredDiffusionBase(
             model_file_name="layer_xl_bgble2fg.safetensors",
             model_url="https://huggingface.co/LayerDiffusion/layerdiffusion-v1/resolve/main/layer_xl_bgble2fg.safetensors",
             sd_version=StableDiffusionVersion.SDXL,
             cond_type=LayerType.BG,
-        )
+        ),
+    )
 
     def apply_layered_diffusion(
         self,
@@ -667,21 +647,17 @@ class LayeredDiffusionDiff:
         uncond,
         blended_latent,
         latent,
-        layer_type,
+        config: str,
         weight: float,
     ):
-        layer_type = LayerType(layer_type)
-        if layer_type == LayerType.FG:
-            ld = self.fg_diff
-        elif layer_type == LayerType.BG:
-            ld = self.bg_diff
-
+        ld_model = [m for m in self.MODELS if m.config_string == config][0]
+        assert get_model_sd_version(model) == ld_model.sd_version
         c_concat = model.model.latent_format.process_in(
             torch.cat([latent["samples"], blended_latent["samples"]], dim=1)
         )
-        return ld.apply_layered_diffusion(model, weight) + ld.apply_c_concat(
-            cond, uncond, c_concat
-        )
+        return ld_model.apply_layered_diffusion(
+            model, weight
+        ) + ld_model.apply_c_concat(cond, uncond, c_concat)
 
 
 NODE_CLASS_MAPPINGS = {
