@@ -128,7 +128,7 @@ class LayeredDiffusionDecode:
 
     RETURN_TYPES = ("IMAGE", "MASK")
     FUNCTION = "decode"
-    CATEGORY = "layered_diffusion"
+    CATEGORY = "layer_diffuse"
 
     def __init__(self) -> None:
         self.vae_transparent_decoder = {}
@@ -325,7 +325,7 @@ class LayeredDiffusionFG:
 
     RETURN_TYPES = ("MODEL",)
     FUNCTION = "apply_layered_diffusion"
-    CATEGORY = "layered_diffusion"
+    CATEGORY = "layer_diffuse"
     MODELS = (
         LayeredDiffusionBase(
             model_file_name="layer_xl_transparent_attn.safetensors",
@@ -396,7 +396,7 @@ class LayeredDiffusionCond:
 
     RETURN_TYPES = ("MODEL", "CONDITIONING", "CONDITIONING")
     FUNCTION = "apply_layered_diffusion"
-    CATEGORY = "layered_diffusion"
+    CATEGORY = "layer_diffuse"
 
     def __init__(self) -> None:
         self.fg_cond = LayeredDiffusionBase(
@@ -466,7 +466,7 @@ class LayeredDiffusionDiff:
 
     RETURN_TYPES = ("MODEL", "CONDITIONING", "CONDITIONING")
     FUNCTION = "apply_layered_diffusion"
-    CATEGORY = "layered_diffusion"
+    CATEGORY = "layer_diffuse"
 
     def __init__(self) -> None:
         self.fg_diff = LayeredDiffusionBase(
