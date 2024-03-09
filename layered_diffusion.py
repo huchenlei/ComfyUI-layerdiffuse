@@ -2,7 +2,7 @@ import os
 from enum import Enum
 import torch
 import functools
-from typing import Optional
+from typing import Optional, List
 from dataclasses import dataclass
 
 import folder_paths
@@ -396,9 +396,9 @@ class LayeredDiffusionJoint:
         self,
         model: ModelPatcher,
         config: str,
-        fg_cond: Optional[torch.TensorType] = None,
-        bg_cond: Optional[torch.TensorType] = None,
-        blended_cond: Optional[torch.TensorType] = None,
+        fg_cond: Optional[List[List[torch.TensorType]]] = None,
+        bg_cond: Optional[List[List[torch.TensorType]]] = None,
+        blended_cond: Optional[List[List[torch.TensorType]]] = None,
     ):
         ld_model = [m for m in self.MODELS if m.config_string == config][0]
         assert get_model_sd_version(model) == ld_model.sd_version
@@ -406,9 +406,12 @@ class LayeredDiffusionJoint:
         work_model = ld_model.apply_layered_diffusion_attn_sharing(model)[0]
         work_model.model_options.setdefault("transformer_options", {})
         work_model.model_options["transformer_options"]["cond_overwrite"] = [
-            fg_cond,
-            bg_cond,
-            blended_cond,
+            cond[0][0] if cond is not None else None
+            for cond in (
+                fg_cond,
+                bg_cond,
+                blended_cond,
+            )
         ]
         return (work_model,)
 

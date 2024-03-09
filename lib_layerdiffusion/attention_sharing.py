@@ -43,6 +43,17 @@ module_mapping_sd15 = {
 }
 
 
+def compute_cond_mark(cond_or_uncond, sigmas):
+    cond_or_uncond_size = int(sigmas.shape[0])
+
+    cond_mark = []
+    for cx in cond_or_uncond:
+        cond_mark += [cx] * cond_or_uncond_size
+
+    cond_mark = torch.Tensor(cond_mark).to(sigmas)
+    return cond_mark
+
+
 class LoRALinearLayer(torch.nn.Module):
     def __init__(self, in_features: int, out_features: int, rank: int = 256, org=None):
         super().__init__()
@@ -168,12 +179,14 @@ class AttentionSharingUnit(torch.nn.Module):
                 context, "(b f) d c -> f b d c", f=self.frames
             )
 
-        # Shape = [self.frames, 2 or 1]
-        framed_cond_mark = (
-            torch.Tensor(transformer_options["cond_or_uncond"])
-            .unsqueeze(0)
-            .repeat(self.frames, 1)
-        )
+        framed_cond_mark = einops.rearrange(
+            compute_cond_mark(
+                transformer_options["cond_or_uncond"],
+                transformer_options["sigmas"],
+            ),
+            "(b f) -> f b",
+            f=self.frames,
+        ).to(modified_hidden_states)
 
         attn_outs = []
         for f in range(self.frames):
