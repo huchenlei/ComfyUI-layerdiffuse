@@ -49,13 +49,18 @@ Combines previous workflows to generate blended and FG given BG. We found that t
 with layer diffusion authors on whether this is expected.
 ![fg_all](https://github.com/huchenlei/ComfyUI-layerdiffuse/assets/20929282/f4c18585-961a-473a-a616-aa3776bacd41)
 
+### [2024-3-9] [Generate FG + Blended given BG](https://github.com/huchenlei/ComfyUI-layerdiffuse/blob/main/examples/layer_diffusion_cond_joint_bg.json)
+Need batch size = 2N. Currently only for SD15.
+![sd15_cond_joint_bg](https://github.com/huchenlei/ComfyUI-layerdiffuse/assets/20929282/9bbfe5c1-14a0-421d-bf06-85e301bf8065)
+
+### [2024-3-9] [Generate BG + Blended given FG](https://github.com/huchenlei/ComfyUI-layerdiffuse/blob/main/examples/layer_diffusion_cond_joint_fg.json)
+Need batch size = 2N. Currently only for SD15.
+![sd15_cond_joint_fg](https://github.com/huchenlei/ComfyUI-layerdiffuse/assets/20929282/65af8b38-cf4c-4667-b76f-3013a0be0a48)
+
+### [2024-3-9] [Generate BG + FG + Blended together](https://github.com/huchenlei/ComfyUI-layerdiffuse/blob/main/examples/layer_diffusion_joint.json)
+Need batch size = 3N. Currently only for SD15.
+![sd15_joint](https://github.com/huchenlei/ComfyUI-layerdiffuse/assets/20929282/e5545809-e3fb-4683-acf5-8728195cb2bc)
+
 ## Note
-- Currently only SDXL is supported. See https://github.com/layerdiffuse/sd-forge-layerdiffuse#model-notes for more details.
+- Currently only SDXL/SD15 are supported. See https://github.com/layerdiffuse/sd-forge-layerdiffuse#model-notes for more details.
 - To decode RGBA result, the generation dimension must be multiple of 64. Otherwise, you will get decode error: ![image](https://github.com/huchenlei/ComfyUI-layerdiffuse/assets/20929282/ff055f99-9297-4ff1-9a33-065aaadcf98e)
-
-
-## TODO
-- [x] Foreground conditioning
-- [x] Background conditioning
-- [x] Blended + foreground => background
-- [x] Blended + background => foreground
