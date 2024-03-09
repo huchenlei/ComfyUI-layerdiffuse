@@ -346,6 +346,43 @@ class LayeredDiffusionFG:
             injection_method=LayerMethod.ATTN,
             attn_sharing=True,
         ),
+    )
+
+    def apply_layered_diffusion(
+        self,
+        model: ModelPatcher,
+        config: str,
+        weight: float,
+    ):
+        ld_model = [m for m in self.MODELS if m.config_string == config][0]
+        assert get_model_sd_version(model) == ld_model.sd_version
+        if ld_model.attn_sharing:
+            return ld_model.apply_layered_diffusion_attn_sharing(model)
+        else:
+            return ld_model.apply_layered_diffusion(model, weight)
+
+
+class LayeredDiffusionJoint:
+    """Generate FG + BG + Blended in one inference batch. Batch size = 3N."""
+
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "model": ("MODEL",),
+                "config": ([c.config_string for c in s.MODELS],),
+            },
+            "optional": {
+                "fg_cond": ("CONDITIONING",),
+                "bg_cond": ("CONDITIONING",),
+                "blended_cond": ("CONDITIONING",),
+            },
+        }
+
+    RETURN_TYPES = ("MODEL",)
+    FUNCTION = "apply_layered_diffusion"
+    CATEGORY = "layer_diffuse"
+    MODELS = (
         LayeredDiffusionBase(
             model_file_name="layer_sd15_joint.safetensors",
             model_url="https://huggingface.co/LayerDiffusion/layerdiffusion-v1/resolve/main/layer_sd15_joint.safetensors",
@@ -359,16 +396,21 @@ class LayeredDiffusionFG:
         self,
         model: ModelPatcher,
         config: str,
-        weight: float,
+        fg_cond: Optional[torch.TensorType] = None,
+        bg_cond: Optional[torch.TensorType] = None,
+        blended_cond: Optional[torch.TensorType] = None,
     ):
-        ld_model = [m for m in LayeredDiffusionFG.MODELS if m.config_string == config][
-            0
-        ]
+        ld_model = [m for m in self.MODELS if m.config_string == config][0]
         assert get_model_sd_version(model) == ld_model.sd_version
-        if ld_model.attn_sharing:
-            return ld_model.apply_layered_diffusion_attn_sharing(model)
-        else:
-            return ld_model.apply_layered_diffusion(model, weight)
+        assert ld_model.attn_sharing
+        work_model = ld_model.apply_layered_diffusion_attn_sharing(model)[0]
+        work_model.model_options.setdefault("transformer_options", {})
+        work_model.model_options["transformer_options"]["cond_overwrite"] = [
+            fg_cond,
+            bg_cond,
+            blended_cond,
+        ]
+        return (work_model,)
 
 
 class LayeredDiffusionCond:
@@ -515,6 +557,7 @@ class LayeredDiffusionDiff:
 
 NODE_CLASS_MAPPINGS = {
     "LayeredDiffusionApply": LayeredDiffusionFG,
+    "LayeredDiffusionJointApply": LayeredDiffusionJoint,
     "LayeredDiffusionCondApply": LayeredDiffusionCond,
     "LayeredDiffusionDiffApply": LayeredDiffusionDiff,
     "LayeredDiffusionDecode": LayeredDiffusionDecode,
@@ -523,6 +566,7 @@ NODE_CLASS_MAPPINGS = {
 
 NODE_DISPLAY_NAME_MAPPINGS = {
     "LayeredDiffusionApply": "Layer Diffuse Apply",
+    "LayeredDiffusionJointApply": "Layer Diffuse Joint Apply",
     "LayeredDiffusionCondApply": "Layer Diffuse Cond Apply",
     "LayeredDiffusionDiffApply": "Layer Diffuse Diff Apply",
     "LayeredDiffusionDecode": "Layer Diffuse Decode",
