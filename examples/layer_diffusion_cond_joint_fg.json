@@ -1,6 +1,6 @@
 {
-  "last_node_id": 36,
-  "last_link_id": 51,
+  "last_node_id": 53,
+  "last_link_id": 90,
   "nodes": [
     {
       "id": 7,
@@ -28,7 +28,7 @@
           "name": "CONDITIONING",
           "type": "CONDITIONING",
           "links": [
-            6
+            65
           ],
           "slot_index": 0
         }
@@ -38,6 +38,170 @@
       },
       "widgets_values": [
         "text, watermark"
+      ]
+    },
+    {
+      "id": 4,
+      "type": "CheckpointLoaderSimple",
+      "pos": [
+        5,
+        479
+      ],
+      "size": {
+        "0": 315,
+        "1": 98
+      },
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            55
+          ],
+          "slot_index": 0
+        },
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            3,
+            5
+          ],
+          "slot_index": 1
+        },
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": [
+            88
+          ],
+          "slot_index": 2
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CheckpointLoaderSimple"
+      },
+      "widgets_values": [
+        "realisticVisionV20_v20.safetensors"
+      ]
+    },
+    {
+      "id": 46,
+      "type": "PreviewImage",
+      "pos": [
+        1525,
+        183
+      ],
+      "size": [
+        406.59525756835933,
+        340.5699157714844
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 75
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PreviewImage"
+      }
+    },
+    {
+      "id": 37,
+      "type": "LayeredDiffusionCondJointApply",
+      "pos": [
+        436,
+        -13
+      ],
+      "size": {
+        "0": 388,
+        "1": 138
+      },
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 55,
+          "slot_index": 0
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 90,
+          "slot_index": 1
+        },
+        {
+          "name": "cond",
+          "type": "CONDITIONING",
+          "link": null
+        },
+        {
+          "name": "blended_cond",
+          "type": "CONDITIONING",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            56
+          ],
+          "shape": 3,
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LayeredDiffusionCondJointApply"
+      },
+      "widgets_values": [
+        "SD15, Foreground, attn_sharing, Batch size (2N)"
+      ],
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 5,
+      "type": "EmptyLatentImage",
+      "pos": [
+        465,
+        671
+      ],
+      "size": {
+        "0": 315,
+        "1": 106
+      },
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            2
+          ],
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "EmptyLatentImage"
+      },
+      "widgets_values": [
+        512,
+        512,
+        4
       ]
     },
     {
@@ -66,7 +230,7 @@
           "name": "CONDITIONING",
           "type": "CONDITIONING",
           "links": [
-            4
+            64
           ],
           "slot_index": 0
         }
@@ -75,129 +239,38 @@
         "Node name for S&R": "CLIPTextEncode"
       },
       "widgets_values": [
-        "beautiful scenery nature glass bottle landscape, , purple galaxy bottle,"
+        "\n"
       ]
-    },
-    {
-      "id": 4,
-      "type": "CheckpointLoaderSimple",
-      "pos": [
-        5,
-        479
-      ],
-      "size": {
-        "0": 315,
-        "1": 98
-      },
-      "flags": {},
-      "order": 0,
-      "mode": 0,
-      "outputs": [
-        {
-          "name": "MODEL",
-          "type": "MODEL",
-          "links": [
-            18
-          ],
-          "slot_index": 0
-        },
-        {
-          "name": "CLIP",
-          "type": "CLIP",
-          "links": [
-            3,
-            5
-          ],
-          "slot_index": 1
-        },
-        {
-          "name": "VAE",
-          "type": "VAE",
-          "links": [
-            22
-          ],
-          "slot_index": 2
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "CheckpointLoaderSimple"
-      },
-      "widgets_values": [
-        "juggernautXL_v8Rundiffusion.safetensors"
-      ]
-    },
-    {
-      "id": 14,
-      "type": "VAEDecode",
-      "pos": [
-        1275,
-        198
-      ],
-      "size": {
-        "0": 210,
-        "1": 46
-      },
-      "flags": {},
-      "order": 6,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "samples",
-          "type": "LATENT",
-          "link": 21
-        },
-        {
-          "name": "vae",
-          "type": "VAE",
-          "link": 22,
-          "slot_index": 1
-        }
-      ],
-      "outputs": [
-        {
-          "name": "IMAGE",
-          "type": "IMAGE",
-          "links": [
-            29,
-            50
-          ],
-          "shape": 3,
-          "slot_index": 0
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "VAEDecode"
-      }
     },
     {
       "id": 3,
       "type": "KSampler",
       "pos": [
-        911,
-        198
+        903,
+        180
       ],
       "size": {
         "0": 315,
         "1": 262
       },
       "flags": {},
-      "order": 5,
+      "order": 6,
       "mode": 0,
       "inputs": [
         {
           "name": "model",
           "type": "MODEL",
-          "link": 19
+          "link": 56
         },
         {
           "name": "positive",
           "type": "CONDITIONING",
-          "link": 4
+          "link": 64
         },
         {
           "name": "negative",
           "type": "CONDITIONING",
-          "link": 6
+          "link": 65
         },
         {
           "name": "latent_image",
@@ -210,8 +283,7 @@
           "name": "LATENT",
           "type": "LATENT",
           "links": [
-            21,
-            49
+            70
           ],
           "slot_index": 0
         }
@@ -220,7 +292,7 @@
         "Node name for S&R": "KSampler"
       },
       "widgets_values": [
-        1029477926308287,
+        748570836161213,
         "randomize",
         20,
         8,
@@ -230,62 +302,30 @@
       ]
     },
     {
-      "id": 5,
-      "type": "EmptyLatentImage",
+      "id": 44,
+      "type": "VAEDecode",
       "pos": [
-        480,
-        691
+        1258,
+        184
       ],
       "size": {
-        "0": 315,
-        "1": 106
+        "0": 210,
+        "1": 46
       },
       "flags": {},
-      "order": 1,
-      "mode": 0,
-      "outputs": [
-        {
-          "name": "LATENT",
-          "type": "LATENT",
-          "links": [
-            2
-          ],
-          "slot_index": 0
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "EmptyLatentImage"
-      },
-      "widgets_values": [
-        1024,
-        1024,
-        1
-      ]
-    },
-    {
-      "id": 36,
-      "type": "LayeredDiffusionDecodeRGBA",
-      "pos": [
-        1589,
-        199
-      ],
-      "size": {
-        "0": 243.60000610351562,
-        "1": 102
-      },
-      "flags": {},
-      "order": 8,
+      "order": 7,
       "mode": 0,
       "inputs": [
         {
           "name": "samples",
           "type": "LATENT",
-          "link": 49
+          "link": 70
         },
         {
-          "name": "images",
-          "type": "IMAGE",
-          "link": 50
+          "name": "vae",
+          "type": "VAE",
+          "link": 88,
+          "slot_index": 1
         }
       ],
       "outputs": [
@@ -293,108 +333,53 @@
           "name": "IMAGE",
           "type": "IMAGE",
           "links": [
-            51
-          ],
-          "shape": 3
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "LayeredDiffusionDecodeRGBA"
-      },
-      "widgets_values": [
-        "SDXL",
-        16
-      ]
-    },
-    {
-      "id": 27,
-      "type": "PreviewImage",
-      "pos": [
-        1930,
-        197
-      ],
-      "size": {
-        "0": 289.6058349609375,
-        "1": 299.6588134765625
-      },
-      "flags": {},
-      "order": 9,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "images",
-          "type": "IMAGE",
-          "link": 51,
-          "slot_index": 0
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "PreviewImage"
-      }
-    },
-    {
-      "id": 20,
-      "type": "PreviewImage",
-      "pos": [
-        1570,
-        365
-      ],
-      "size": {
-        "0": 289.6058349609375,
-        "1": 299.6588134765625
-      },
-      "flags": {},
-      "order": 7,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "images",
-          "type": "IMAGE",
-          "link": 29
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "PreviewImage"
-      }
-    },
-    {
-      "id": 13,
-      "type": "LayeredDiffusionApply",
-      "pos": [
-        468,
-        -2
-      ],
-      "size": {
-        "0": 327.8314208984375,
-        "1": 106.42147827148438
-      },
-      "flags": {},
-      "order": 2,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "model",
-          "type": "MODEL",
-          "link": 18
-        }
-      ],
-      "outputs": [
-        {
-          "name": "MODEL",
-          "type": "MODEL",
-          "links": [
-            19
+            75
           ],
           "shape": 3,
           "slot_index": 0
         }
       ],
       "properties": {
-        "Node name for S&R": "LayeredDiffusionApply"
+        "Node name for S&R": "VAEDecode"
+      }
+    },
+    {
+      "id": 30,
+      "type": "LoadImage",
+      "pos": [
+        6,
+        5
+      ],
+      "size": {
+        "0": 315,
+        "1": 314
+      },
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            90
+          ],
+          "shape": 3,
+          "slot_index": 0
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null,
+          "shape": 3
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
       },
       "widgets_values": [
-        "SDXL, Conv Injection",
-        1
+        "dog (2).png",
+        "image"
       ]
     }
   ],
@@ -416,14 +401,6 @@
       "CLIP"
     ],
     [
-      4,
-      6,
-      0,
-      3,
-      1,
-      "CONDITIONING"
-    ],
-    [
       5,
       4,
       1,
@@ -432,7 +409,31 @@
       "CLIP"
     ],
     [
+      55,
+      4,
+      0,
+      37,
+      0,
+      "MODEL"
+    ],
+    [
+      56,
+      37,
+      0,
+      3,
+      0,
+      "MODEL"
+    ],
+    [
+      64,
       6,
+      0,
+      3,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      65,
       7,
       0,
       3,
@@ -440,67 +441,35 @@
       "CONDITIONING"
     ],
     [
-      18,
-      4,
-      0,
-      13,
-      0,
-      "MODEL"
-    ],
-    [
-      19,
-      13,
-      0,
+      70,
       3,
       0,
-      "MODEL"
-    ],
-    [
-      21,
-      3,
-      0,
-      14,
+      44,
       0,
       "LATENT"
     ],
     [
-      22,
+      75,
+      44,
+      0,
+      46,
+      0,
+      "IMAGE"
+    ],
+    [
+      88,
       4,
       2,
-      14,
+      44,
       1,
       "VAE"
     ],
     [
-      29,
-      14,
+      90,
+      30,
       0,
-      20,
-      0,
-      "IMAGE"
-    ],
-    [
-      49,
-      3,
-      0,
-      36,
-      0,
-      "LATENT"
-    ],
-    [
-      50,
-      14,
-      0,
-      36,
+      37,
       1,
-      "IMAGE"
-    ],
-    [
-      51,
-      36,
-      0,
-      27,
-      0,
       "IMAGE"
     ]
   ],

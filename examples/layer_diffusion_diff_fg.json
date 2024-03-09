@@ -256,10 +256,10 @@
         -137,
         -388
       ],
-      "size": [
-        288.47406005859364,
-        317.46052246093745
-      ],
+      "size": {
+        "0": 288.47406005859375,
+        "1": 317.46051025390625
+      },
       "flags": {},
       "order": 2,
       "mode": 0,
@@ -526,7 +526,7 @@
         "Node name for S&R": "LayeredDiffusionDiffApply"
       },
       "widgets_values": [
-        "Foreground",
+        "SDXL, Foreground",
         1
       ],
       "color": "#232",
