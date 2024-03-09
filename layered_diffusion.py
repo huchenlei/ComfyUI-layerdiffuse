@@ -193,8 +193,8 @@ class LayeredDiffusionDecodeRGBA(LayeredDiffusionDecode):
 
     RETURN_TYPES = ("IMAGE",)
 
-    def decode(self, samples, images, sub_batch_size: int):
-        image, mask = super().decode(samples, images, sub_batch_size)
+    def decode(self, samples, images, sd_version: str, sub_batch_size: int):
+        image, mask = super().decode(samples, images, sd_version, sub_batch_size)
         alpha = 1.0 - mask
         return JoinImageWithAlpha().join_image_with_alpha(image, alpha)
 
@@ -287,7 +287,7 @@ class LayeredDiffusionBase:
             work_model, self.frames, use_control=control_img is not None
         )
         patcher.load_state_dict(layer_lora_state_dict, strict=True)
-        if control_img:
+        if control_img is not None:
             patcher.set_control(control_img)
         return (work_model,)
 
@@ -485,6 +485,73 @@ class LayeredDiffusionCond:
         )
 
 
+class LayeredDiffusionCondJoint:
+    """Generate fg/bg + blended given fg/bg.
+    - FG => Blended + BG
+    - BG => Blended + FG
+    """
+
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "model": ("MODEL",),
+                "image": ("IMAGE",),
+                "config": ([c.config_string for c in s.MODELS],),
+            },
+            "optional": {
+                "cond": ("CONDITIONING",),
+                "blended_cond": ("CONDITIONING",),
+            },
+        }
+
+    RETURN_TYPES = ("MODEL",)
+    FUNCTION = "apply_layered_diffusion"
+    CATEGORY = "layer_diffuse"
+    MODELS = (
+        LayeredDiffusionBase(
+            model_file_name="layer_sd15_fg2bg.safetensors",
+            model_url="https://huggingface.co/LayerDiffusion/layerdiffusion-v1/resolve/main/layer_sd15_fg2bg.safetensors",
+            sd_version=StableDiffusionVersion.SD1x,
+            attn_sharing=True,
+            frames=2,
+            cond_type=LayerType.FG,
+        ),
+        LayeredDiffusionBase(
+            model_file_name="layer_sd15_bg2fg.safetensors",
+            model_url="https://huggingface.co/LayerDiffusion/layerdiffusion-v1/resolve/main/layer_sd15_bg2fg.safetensors",
+            sd_version=StableDiffusionVersion.SD1x,
+            attn_sharing=True,
+            frames=2,
+            cond_type=LayerType.BG,
+        ),
+    )
+
+    def apply_layered_diffusion(
+        self,
+        model: ModelPatcher,
+        image,
+        config: str,
+        cond: Optional[List[List[torch.TensorType]]] = None,
+        blended_cond: Optional[List[List[torch.TensorType]]] = None,
+    ):
+        ld_model = [m for m in self.MODELS if m.config_string == config][0]
+        assert get_model_sd_version(model) == ld_model.sd_version
+        assert ld_model.attn_sharing
+        work_model = ld_model.apply_layered_diffusion_attn_sharing(
+            model, control_img=image.movedim(-1, 1)
+        )[0]
+        work_model.model_options.setdefault("transformer_options", {})
+        work_model.model_options["transformer_options"]["cond_overwrite"] = [
+            cond[0][0] if cond is not None else None
+            for cond in (
+                cond,
+                blended_cond,
+            )
+        ]
+        return (work_model,)
+
+
 class LayeredDiffusionDiff:
     """Extract FG/BG from blended image.
     - Blended + FG => BG
@@ -562,6 +629,7 @@ NODE_CLASS_MAPPINGS = {
     "LayeredDiffusionApply": LayeredDiffusionFG,
     "LayeredDiffusionJointApply": LayeredDiffusionJoint,
     "LayeredDiffusionCondApply": LayeredDiffusionCond,
+    "LayeredDiffusionCondJointApply": LayeredDiffusionCondJoint,
     "LayeredDiffusionDiffApply": LayeredDiffusionDiff,
     "LayeredDiffusionDecode": LayeredDiffusionDecode,
     "LayeredDiffusionDecodeRGBA": LayeredDiffusionDecodeRGBA,
@@ -571,6 +639,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "LayeredDiffusionApply": "Layer Diffuse Apply",
     "LayeredDiffusionJointApply": "Layer Diffuse Joint Apply",
     "LayeredDiffusionCondApply": "Layer Diffuse Cond Apply",
+    "LayeredDiffusionCondJointApply": "Layer Diffuse Cond Joint Apply",
     "LayeredDiffusionDiffApply": "Layer Diffuse Diff Apply",
     "LayeredDiffusionDecode": "Layer Diffuse Decode",
     "LayeredDiffusionDecodeRGBA": "Layer Diffuse Decode (RGBA)",
