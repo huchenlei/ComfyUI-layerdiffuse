@@ -346,6 +346,13 @@ class LayeredDiffusionFG:
             injection_method=LayerMethod.ATTN,
             attn_sharing=True,
         ),
+        LayeredDiffusionBase(
+            model_file_name="layer_sd15_joint.safetensors",
+            model_url="https://huggingface.co/LayerDiffusion/layerdiffusion-v1/resolve/main/layer_sd15_joint.safetensors",
+            sd_version=StableDiffusionVersion.SD1x,
+            attn_sharing=True,
+            frames=3,
+        ),
     )
 
     def apply_layered_diffusion(
