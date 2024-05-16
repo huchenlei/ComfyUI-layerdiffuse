@@ -1,0 +1,15 @@
+[project]
+name = "comfyui-layerdiffuse"
+description = "Transparent Image Layer Diffusion using Latent Transparency"
+version = "1.0.0"
+license = "LICENSE"
+dependencies = ["diffusers>=0.25.0", "opencv-python"]
+
+[project.urls]
+Repository = "https://github.com/huchenlei/ComfyUI-layerdiffuse"
+
+# Used by Comfy Registry https://comfyregistry.org
+[tool.comfy]
+PublisherId = ""
+DisplayName = "ComfyUI-layerdiffuse"
+Icon = ""
