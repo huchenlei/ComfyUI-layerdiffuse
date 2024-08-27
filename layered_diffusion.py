@@ -1,7 +1,6 @@
 import os
 from enum import Enum
 import torch
-import functools
 import copy
 from typing import Optional, List
 from dataclasses import dataclass
