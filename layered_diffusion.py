@@ -7,6 +7,7 @@ from typing import Optional, List
 from dataclasses import dataclass
 
 import folder_paths
+import comfy.lora
 import comfy.model_management
 import comfy.model_base
 import comfy.supported_models
@@ -36,10 +37,8 @@ def calculate_weight_adjust_channel(func):
     """Patches ComfyUI's LoRA weight application to accept multi-channel inputs."""
 
     @functools.wraps(func)
-    def calculate_weight(
-        self: ModelPatcher, patches, weight: torch.Tensor, key: str
-    ) -> torch.Tensor:
-        weight = func(self, patches, weight, key)
+    def calculate_weight(patches, weight, key, intermediate_dtype=torch.float32):
+        weight = func(patches, weight, key, intermediate_dtype=intermediate_dtype)
 
         for p in patches:
             alpha = p[0]
@@ -91,8 +90,8 @@ def calculate_weight_adjust_channel(func):
     return calculate_weight
 
 
-ModelPatcher.calculate_weight = calculate_weight_adjust_channel(
-    ModelPatcher.calculate_weight
+comfy.lora.calculate_weight = calculate_weight_adjust_channel(
+    comfy.lora.calculate_weight
 )
 
 # ------------ End patching ComfyUI ------------
