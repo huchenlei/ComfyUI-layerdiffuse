@@ -164,6 +164,7 @@ class LayeredDiffusionDecodeSplit(LayeredDiffusionDecodeRGBA):
 
     MAX_FRAMES = 3
     RETURN_TYPES = ("IMAGE",) * MAX_FRAMES
+    RETURN_NAMES = tuple(f"image{i + 1}" for i in range(MAX_FRAMES))
 
     def decode(
         self,
@@ -441,6 +442,7 @@ class LayeredDiffusionCond:
         }
 
     RETURN_TYPES = ("MODEL", "CONDITIONING", "CONDITIONING")
+    RETURN_NAMES = ("MODEL", "positive", "negative")
     FUNCTION = "apply_layered_diffusion"
     CATEGORY = "layer_diffuse"
     MODELS = (
@@ -566,6 +568,7 @@ class LayeredDiffusionDiff:
         }
 
     RETURN_TYPES = ("MODEL", "CONDITIONING", "CONDITIONING")
+    RETURN_NAMES = ("MODEL", "positive", "negative")
     FUNCTION = "apply_layered_diffusion"
     CATEGORY = "layer_diffuse"
     MODELS = (
