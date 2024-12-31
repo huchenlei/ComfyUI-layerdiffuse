@@ -1,0 +1,159 @@
+{
+  "LayeredDiffusionApply": {
+    "display_name": "Применение слоя диффузии",
+    "inputs": {
+      "config": {
+        "name": "конфиг"
+      },
+      "model": {
+        "name": "модель"
+      },
+      "weight": {
+        "name": "вес"
+      }
+    }
+  },
+  "LayeredDiffusionCondApply": {
+    "display_name": "Применение условной диффузии слоя",
+    "inputs": {
+      "cond": {
+        "name": "условие"
+      },
+      "config": {
+        "name": "конфиг"
+      },
+      "latent": {
+        "name": "скрытый"
+      },
+      "model": {
+        "name": "модель"
+      },
+      "uncond": {
+        "name": "безусловный"
+      },
+      "weight": {
+        "name": "вес"
+      }
+    }
+  },
+  "LayeredDiffusionCondJointApply": {
+    "display_name": "Совместное применение условной диффузии слоя",
+    "inputs": {
+      "blended_cond": {
+        "name": "смешанное условие"
+      },
+      "cond": {
+        "name": "условие"
+      },
+      "config": {
+        "name": "конфиг"
+      },
+      "image": {
+        "name": "изображение"
+      },
+      "model": {
+        "name": "модель"
+      }
+    }
+  },
+  "LayeredDiffusionDecode": {
+    "display_name": "Декодирование слоя диффузии",
+    "inputs": {
+      "images": {
+        "name": "изображения"
+      },
+      "samples": {
+        "name": "образцы"
+      },
+      "sd_version": {
+        "name": "версия_sd"
+      },
+      "sub_batch_size": {
+        "name": "размер_подпакета"
+      }
+    }
+  },
+  "LayeredDiffusionDecodeRGBA": {
+    "display_name": "Декодирование слоя диффузии (RGBA)",
+    "inputs": {
+      "images": {
+        "name": "изображения"
+      },
+      "samples": {
+        "name": "образцы"
+      },
+      "sd_version": {
+        "name": "версия_sd"
+      },
+      "sub_batch_size": {
+        "name": "размер_подпакета"
+      }
+    }
+  },
+  "LayeredDiffusionDecodeSplit": {
+    "display_name": "Декодирование слоя диффузии (Разделение)",
+    "inputs": {
+      "frames": {
+        "name": "кадры"
+      },
+      "images": {
+        "name": "изображения"
+      },
+      "samples": {
+        "name": "образцы"
+      },
+      "sd_version": {
+        "name": "версия_sd"
+      },
+      "sub_batch_size": {
+        "name": "размер_подпакета"
+      }
+    }
+  },
+  "LayeredDiffusionDiffApply": {
+    "display_name": "Применение дифференцирования диффузии слоя",
+    "inputs": {
+      "blended_latent": {
+        "name": "смешанное скрытое"
+      },
+      "cond": {
+        "name": "условие"
+      },
+      "config": {
+        "name": "конфиг"
+      },
+      "latent": {
+        "name": "скрытый"
+      },
+      "model": {
+        "name": "модель"
+      },
+      "uncond": {
+        "name": "безусловный"
+      },
+      "weight": {
+        "name": "вес"
+      }
+    }
+  },
+  "LayeredDiffusionJointApply": {
+    "display_name": "Совместное применение слоя диффузии",
+    "inputs": {
+      "bg_cond": {
+        "name": "bg_условие"
+      },
+      "blended_cond": {
+        "name": "смешанное условие"
+      },
+      "config": {
+        "name": "конфиг"
+      },
+      "fg_cond": {
+        "name": "fg_условие"
+      },
+      "model": {
+        "name": "модель"
+      }
+    }
+  }
+}

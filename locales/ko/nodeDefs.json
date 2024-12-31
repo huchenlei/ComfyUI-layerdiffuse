@@ -1,0 +1,159 @@
+{
+  "LayeredDiffusionApply": {
+    "display_name": "레이어 확산 적용",
+    "inputs": {
+      "config": {
+        "name": "설정"
+      },
+      "model": {
+        "name": "모델"
+      },
+      "weight": {
+        "name": "가중치"
+      }
+    }
+  },
+  "LayeredDiffusionCondApply": {
+    "display_name": "레이어 확산 조건 적용",
+    "inputs": {
+      "cond": {
+        "name": "조건"
+      },
+      "config": {
+        "name": "설정"
+      },
+      "latent": {
+        "name": "잠재"
+      },
+      "model": {
+        "name": "모델"
+      },
+      "uncond": {
+        "name": "비조건"
+      },
+      "weight": {
+        "name": "가중치"
+      }
+    }
+  },
+  "LayeredDiffusionCondJointApply": {
+    "display_name": "레이어 확산 조건 결합 적용",
+    "inputs": {
+      "blended_cond": {
+        "name": "혼합된 조건"
+      },
+      "cond": {
+        "name": "조건"
+      },
+      "config": {
+        "name": "설정"
+      },
+      "image": {
+        "name": "이미지"
+      },
+      "model": {
+        "name": "모델"
+      }
+    }
+  },
+  "LayeredDiffusionDecode": {
+    "display_name": "레이어 확산 디코드",
+    "inputs": {
+      "images": {
+        "name": "이미지"
+      },
+      "samples": {
+        "name": "샘플"
+      },
+      "sd_version": {
+        "name": "sd_version"
+      },
+      "sub_batch_size": {
+        "name": "sub_batch_size"
+      }
+    }
+  },
+  "LayeredDiffusionDecodeRGBA": {
+    "display_name": "레이어 확산 디코드 (RGBA)",
+    "inputs": {
+      "images": {
+        "name": "이미지"
+      },
+      "samples": {
+        "name": "샘플"
+      },
+      "sd_version": {
+        "name": "sd_version"
+      },
+      "sub_batch_size": {
+        "name": "sub_batch_size"
+      }
+    }
+  },
+  "LayeredDiffusionDecodeSplit": {
+    "display_name": "레이어 확산 디코드 (분할)",
+    "inputs": {
+      "frames": {
+        "name": "프레임"
+      },
+      "images": {
+        "name": "이미지"
+      },
+      "samples": {
+        "name": "샘플"
+      },
+      "sd_version": {
+        "name": "sd_version"
+      },
+      "sub_batch_size": {
+        "name": "sub_batch_size"
+      }
+    }
+  },
+  "LayeredDiffusionDiffApply": {
+    "display_name": "레이어 확산 차이 적용",
+    "inputs": {
+      "blended_latent": {
+        "name": "혼합된 잠재"
+      },
+      "cond": {
+        "name": "조건"
+      },
+      "config": {
+        "name": "설정"
+      },
+      "latent": {
+        "name": "잠재"
+      },
+      "model": {
+        "name": "모델"
+      },
+      "uncond": {
+        "name": "비조건"
+      },
+      "weight": {
+        "name": "가중치"
+      }
+    }
+  },
+  "LayeredDiffusionJointApply": {
+    "display_name": "레이어 확산 결합 적용",
+    "inputs": {
+      "bg_cond": {
+        "name": "배경 조건"
+      },
+      "blended_cond": {
+        "name": "혼합된 조건"
+      },
+      "config": {
+        "name": "설정"
+      },
+      "fg_cond": {
+        "name": "전경 조건"
+      },
+      "model": {
+        "name": "모델"
+      }
+    }
+  }
+}

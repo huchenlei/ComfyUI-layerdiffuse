@@ -1,0 +1,159 @@
+{
+  "LayeredDiffusionApply": {
+    "display_name": "层次扩散应用",
+    "inputs": {
+      "config": {
+        "name": "配置"
+      },
+      "model": {
+        "name": "模型"
+      },
+      "weight": {
+        "name": "权重"
+      }
+    }
+  },
+  "LayeredDiffusionCondApply": {
+    "display_name": "层次扩散条件应用",
+    "inputs": {
+      "cond": {
+        "name": "条件"
+      },
+      "config": {
+        "name": "配置"
+      },
+      "latent": {
+        "name": "潜在"
+      },
+      "model": {
+        "name": "模型"
+      },
+      "uncond": {
+        "name": "无条件"
+      },
+      "weight": {
+        "name": "权重"
+      }
+    }
+  },
+  "LayeredDiffusionCondJointApply": {
+    "display_name": "层次扩散条件联合应用",
+    "inputs": {
+      "blended_cond": {
+        "name": "混合条件"
+      },
+      "cond": {
+        "name": "条件"
+      },
+      "config": {
+        "name": "配置"
+      },
+      "image": {
+        "name": "图像"
+      },
+      "model": {
+        "name": "模型"
+      }
+    }
+  },
+  "LayeredDiffusionDecode": {
+    "display_name": "层次扩散解码",
+    "inputs": {
+      "images": {
+        "name": "图像"
+      },
+      "samples": {
+        "name": "样本"
+      },
+      "sd_version": {
+        "name": "sd版本"
+      },
+      "sub_batch_size": {
+        "name": "子批量大小"
+      }
+    }
+  },
+  "LayeredDiffusionDecodeRGBA": {
+    "display_name": "层次扩散解码（RGBA）",
+    "inputs": {
+      "images": {
+        "name": "图像"
+      },
+      "samples": {
+        "name": "样本"
+      },
+      "sd_version": {
+        "name": "sd版本"
+      },
+      "sub_batch_size": {
+        "name": "子批量大小"
+      }
+    }
+  },
+  "LayeredDiffusionDecodeSplit": {
+    "display_name": "层次扩散解码（分割）",
+    "inputs": {
+      "frames": {
+        "name": "帧"
+      },
+      "images": {
+        "name": "图像"
+      },
+      "samples": {
+        "name": "样本"
+      },
+      "sd_version": {
+        "name": "sd版本"
+      },
+      "sub_batch_size": {
+        "name": "子批量大小"
+      }
+    }
+  },
+  "LayeredDiffusionDiffApply": {
+    "display_name": "层次扩散差异应用",
+    "inputs": {
+      "blended_latent": {
+        "name": "混合潜在"
+      },
+      "cond": {
+        "name": "条件"
+      },
+      "config": {
+        "name": "配置"
+      },
+      "latent": {
+        "name": "潜在"
+      },
+      "model": {
+        "name": "模型"
+      },
+      "uncond": {
+        "name": "无条件"
+      },
+      "weight": {
+        "name": "权重"
+      }
+    }
+  },
+  "LayeredDiffusionJointApply": {
+    "display_name": "层次扩散联合应用",
+    "inputs": {
+      "bg_cond": {
+        "name": "背景条件"
+      },
+      "blended_cond": {
+        "name": "混合条件"
+      },
+      "config": {
+        "name": "配置"
+      },
+      "fg_cond": {
+        "name": "前景条件"
+      },
+      "model": {
+        "name": "模型"
+      }
+    }
+  }
+}

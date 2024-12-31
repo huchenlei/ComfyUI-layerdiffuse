@@ -1,0 +1,159 @@
+{
+  "LayeredDiffusionApply": {
+    "display_name": "Appliquer Diffusion en Couches",
+    "inputs": {
+      "config": {
+        "name": "config"
+      },
+      "model": {
+        "name": "modèle"
+      },
+      "weight": {
+        "name": "poids"
+      }
+    }
+  },
+  "LayeredDiffusionCondApply": {
+    "display_name": "Appliquer Diffusion Conditionnelle en Couches",
+    "inputs": {
+      "cond": {
+        "name": "cond"
+      },
+      "config": {
+        "name": "config"
+      },
+      "latent": {
+        "name": "latent"
+      },
+      "model": {
+        "name": "modèle"
+      },
+      "uncond": {
+        "name": "non cond"
+      },
+      "weight": {
+        "name": "poids"
+      }
+    }
+  },
+  "LayeredDiffusionCondJointApply": {
+    "display_name": "Appliquer Diffusion Conditionnelle Conjointe en Couches",
+    "inputs": {
+      "blended_cond": {
+        "name": "cond mélangé"
+      },
+      "cond": {
+        "name": "cond"
+      },
+      "config": {
+        "name": "config"
+      },
+      "image": {
+        "name": "image"
+      },
+      "model": {
+        "name": "modèle"
+      }
+    }
+  },
+  "LayeredDiffusionDecode": {
+    "display_name": "Décoder Diffusion en Couches",
+    "inputs": {
+      "images": {
+        "name": "images"
+      },
+      "samples": {
+        "name": "échantillons"
+      },
+      "sd_version": {
+        "name": "version_sd"
+      },
+      "sub_batch_size": {
+        "name": "taille_sous_lot"
+      }
+    }
+  },
+  "LayeredDiffusionDecodeRGBA": {
+    "display_name": "Décoder Diffusion en Couches (RGBA)",
+    "inputs": {
+      "images": {
+        "name": "images"
+      },
+      "samples": {
+        "name": "échantillons"
+      },
+      "sd_version": {
+        "name": "version_sd"
+      },
+      "sub_batch_size": {
+        "name": "taille_sous_lot"
+      }
+    }
+  },
+  "LayeredDiffusionDecodeSplit": {
+    "display_name": "Décoder Diffusion en Couches (Split)",
+    "inputs": {
+      "frames": {
+        "name": "cadres"
+      },
+      "images": {
+        "name": "images"
+      },
+      "samples": {
+        "name": "échantillons"
+      },
+      "sd_version": {
+        "name": "version_sd"
+      },
+      "sub_batch_size": {
+        "name": "taille_sous_lot"
+      }
+    }
+  },
+  "LayeredDiffusionDiffApply": {
+    "display_name": "Appliquer Différence de Diffusion en Couches",
+    "inputs": {
+      "blended_latent": {
+        "name": "latent mélangé"
+      },
+      "cond": {
+        "name": "cond"
+      },
+      "config": {
+        "name": "config"
+      },
+      "latent": {
+        "name": "latent"
+      },
+      "model": {
+        "name": "modèle"
+      },
+      "uncond": {
+        "name": "non cond"
+      },
+      "weight": {
+        "name": "poids"
+      }
+    }
+  },
+  "LayeredDiffusionJointApply": {
+    "display_name": "Appliquer Diffusion Conjointe en Couches",
+    "inputs": {
+      "bg_cond": {
+        "name": "cond_bg"
+      },
+      "blended_cond": {
+        "name": "cond mélangé"
+      },
+      "config": {
+        "name": "config"
+      },
+      "fg_cond": {
+        "name": "cond_fg"
+      },
+      "model": {
+        "name": "modèle"
+      }
+    }
+  }
+}
