@@ -1,0 +1,159 @@
+{
+  "LayeredDiffusionApply": {
+    "display_name": "レイヤー拡散適用",
+    "inputs": {
+      "config": {
+        "name": "設定"
+      },
+      "model": {
+        "name": "モデル"
+      },
+      "weight": {
+        "name": "重み"
+      }
+    }
+  },
+  "LayeredDiffusionCondApply": {
+    "display_name": "レイヤー拡散条件付き適用",
+    "inputs": {
+      "cond": {
+        "name": "条件"
+      },
+      "config": {
+        "name": "設定"
+      },
+      "latent": {
+        "name": "潜在"
+      },
+      "model": {
+        "name": "モデル"
+      },
+      "uncond": {
+        "name": "非条件"
+      },
+      "weight": {
+        "name": "重み"
+      }
+    }
+  },
+  "LayeredDiffusionCondJointApply": {
+    "display_name": "レイヤー拡散条件付き共同適用",
+    "inputs": {
+      "blended_cond": {
+        "name": "ブレンド条件"
+      },
+      "cond": {
+        "name": "条件"
+      },
+      "config": {
+        "name": "設定"
+      },
+      "image": {
+        "name": "画像"
+      },
+      "model": {
+        "name": "モデル"
+      }
+    }
+  },
+  "LayeredDiffusionDecode": {
+    "display_name": "レイヤー拡散デコード",
+    "inputs": {
+      "images": {
+        "name": "画像"
+      },
+      "samples": {
+        "name": "サンプル"
+      },
+      "sd_version": {
+        "name": "sdバージョン"
+      },
+      "sub_batch_size": {
+        "name": "サブバッチサイズ"
+      }
+    }
+  },
+  "LayeredDiffusionDecodeRGBA": {
+    "display_name": "レイヤー拡散デコード（RGBA）",
+    "inputs": {
+      "images": {
+        "name": "画像"
+      },
+      "samples": {
+        "name": "サンプル"
+      },
+      "sd_version": {
+        "name": "sdバージョン"
+      },
+      "sub_batch_size": {
+        "name": "サブバッチサイズ"
+      }
+    }
+  },
+  "LayeredDiffusionDecodeSplit": {
+    "display_name": "レイヤー拡散デコード（スプリット）",
+    "inputs": {
+      "frames": {
+        "name": "フレーム"
+      },
+      "images": {
+        "name": "画像"
+      },
+      "samples": {
+        "name": "サンプル"
+      },
+      "sd_version": {
+        "name": "sdバージョン"
+      },
+      "sub_batch_size": {
+        "name": "サブバッチサイズ"
+      }
+    }
+  },
+  "LayeredDiffusionDiffApply": {
+    "display_name": "レイヤー拡散差分適用",
+    "inputs": {
+      "blended_latent": {
+        "name": "ブレンド潜在"
+      },
+      "cond": {
+        "name": "条件"
+      },
+      "config": {
+        "name": "設定"
+      },
+      "latent": {
+        "name": "潜在"
+      },
+      "model": {
+        "name": "モデル"
+      },
+      "uncond": {
+        "name": "非条件"
+      },
+      "weight": {
+        "name": "重み"
+      }
+    }
+  },
+  "LayeredDiffusionJointApply": {
+    "display_name": "レイヤー拡散共同適用",
+    "inputs": {
+      "bg_cond": {
+        "name": "bg条件"
+      },
+      "blended_cond": {
+        "name": "ブレンド条件"
+      },
+      "config": {
+        "name": "設定"
+      },
+      "fg_cond": {
+        "name": "fg条件"
+      },
+      "model": {
+        "name": "モデル"
+      }
+    }
+  }
+}
