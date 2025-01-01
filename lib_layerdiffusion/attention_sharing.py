@@ -327,7 +327,6 @@ class HookerLayers(torch.nn.Module):
 class AttentionSharingPatcher(torch.nn.Module):
     def __init__(self, unet, frames=2, use_control=True, rank=256):
         super().__init__()
-        model_management.unload_model_clones(unet)
 
         units = []
         for i in range(32):
