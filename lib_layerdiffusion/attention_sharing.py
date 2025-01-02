@@ -346,7 +346,7 @@ def unload_model_clones(model, unload_weights_only=True, force_unload=True):
         unload_weight = True
 
     if not force_unload:
-        if unload_weights_only and unload_weight == False:
+        if unload_weights_only and unload_weight is False:
             return None
     else:
         unload_weight = True
@@ -355,6 +355,7 @@ def unload_model_clones(model, unload_weights_only=True, force_unload=True):
         current_loaded_models.pop(i).model_unload(unpatch_weights=unload_weight)
 
     return unload_weight
+
 
 class AttentionSharingPatcher(torch.nn.Module):
     def __init__(self, unet, frames=2, use_control=True, rank=256):
