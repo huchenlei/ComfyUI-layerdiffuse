@@ -1,7 +1,7 @@
 [project]
 name = "comfyui-layerdiffuse"
 description = "Transparent Image Layer Diffusion using Latent Transparency"
-version = "1.0.3"
+version = "1.0.4"
 license = { file = "LICENSE" }
 dependencies = ["diffusers>=0.25.0", "opencv-python"]
 
