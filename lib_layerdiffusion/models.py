@@ -328,3 +328,56 @@ class TransparentVAEDecoder:
         assert y.shape[1] == 4
         # Restore image to original device of input image.
         return y.to(pixel_device, dtype=pixel_dtype)
+
+
+class TransparentVAEEncoder(torch.nn.Module):
+    def __init__(self, sd, device, dtype, alpha=100.0, *args, **kwargs):
+        super().__init__(*args, **kwargs)   
+        self.load_device = device
+        self.dtype = dtype
+
+        model = LatentTransparencyOffsetEncoder()
+        model.load_state_dict(sd, strict=True)
+        model.to(device=self.load_device, dtype=self.dtype)
+        model.eval()
+        sdxl_name = 'frankjoshua/juggernautXL_v8Rundiffusion'
+        self.sd_vae = AutoencoderKL.from_pretrained(
+            sdxl_name, subfolder="vae", torch_dtype=torch.bfloat16, variant="fp16").to(device=self.load_device, dtype=self.dtype)
+
+
+        self.model = model
+        # similar to LoRA's alpha to avoid initial zero-initialized outputs being too small
+        self.alpha = alpha
+
+
+    @torch.no_grad()
+    def encode_image(
+        self,
+        sd_vae,
+        list_of_np_rgba_hwc_uint8,
+        use_offset: bool = True,
+    ):
+
+        list_of_np_rgb_padded = [pad_rgb(x) for x in list_of_np_rgba_hwc_uint8] ## rgb padding 
+        rgb_padded_bchw_01 = torch.from_numpy(np.stack(list_of_np_rgb_padded, axis=0)).float().movedim(-1, 1)
+
+        rgba_bchw_01 = torch.from_numpy(np.stack(list_of_np_rgba_hwc_uint8, axis=0)).float().movedim(-1, 1) / 255.0
+
+
+        rgb_bchw_01 = rgba_bchw_01[:, :3, :, :]
+        a_bchw_01 = rgba_bchw_01[:, 3:, :, :]
+        vae_feed = (rgb_bchw_01 * 2.0 - 1.0) * a_bchw_01
+        vae_feed = vae_feed.to(device=self.load_device, dtype=self.dtype) 
+
+        latent_dist = self.sd_vae.encode(vae_feed).latent_dist
+        offset_feed = torch.cat([a_bchw_01, rgb_padded_bchw_01], dim=1).to(device=self.load_device, dtype=self.dtype)
+
+        offset = self.model(offset_feed) * self.alpha
+
+        if use_offset:
+            latent = dist_sample_deterministic(dist=latent_dist, perturbation=offset)
+        else:
+            latent = latent_dist.sample()
+
+
+        return latent, rgb_padded_bchw_01.movedim(1, -1)

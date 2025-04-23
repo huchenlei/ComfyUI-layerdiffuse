@@ -19,7 +19,7 @@ from .lib_layerdiffusion.utils import (
     load_file_from_url,
     to_lora_patch_dict,
 )
-from .lib_layerdiffusion.models import TransparentVAEDecoder
+from .lib_layerdiffusion.models import TransparentVAEDecoder, TransparentVAEEncoder
 from .lib_layerdiffusion.attention_sharing import AttentionSharingPatcher
 from .lib_layerdiffusion.enums import StableDiffusionVersion
 
@@ -603,6 +603,120 @@ class LayeredDiffusionDiff:
         ) + ld_model.apply_c_concat(cond, uncond, c_concat)
 
 
+
+class LayerdiffusionEncode:
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "images": ("IMAGE",),    
+                "vae":    ("VAE",), 
+                "sd_version": (
+                    [
+                        StableDiffusionVersion.SD1x.value,
+                        StableDiffusionVersion.SDXL.value,
+                    ],
+                    {"default": StableDiffusionVersion.SDXL.value},
+                ),
+                "sub_batch_size": (
+                    "INT",
+                    {"default": 16, "min": 1, "max": 4096, "step": 1},
+                ),
+                "use_offset": (
+                    "BOOLEAN",
+                    {"default": True},
+                ),
+            },
+        }
+
+    RETURN_TYPES = ("LATENT", "IMAGE")
+    FUNCTION = "encode"
+    CATEGORY = "layer_diffuse"
+
+
+    def __init__(self) -> None:
+        self.vae_transparent_encoder = {}
+
+    def encode(
+        self,
+        images,                 # [B, H, W, 4] float32/16 (0‑1)
+        vae,                    # AutoencoderKL (same version as sd_version)
+        sd_version: str,
+        sub_batch_size: int = 16,
+        use_offset: bool = True,
+    ):
+        sd_version = StableDiffusionVersion(sd_version)
+        if sd_version == StableDiffusionVersion.SD1x:
+            url = (
+                "https://huggingface.co/LayerDiffusion/layerdiffusion-v1/resolve/main/layer_sd15_vae_transparent_encoder.safetensors"
+            )
+            file_name = "layer_sd15_vae_transparent_encoder.safetensors"
+        elif sd_version == StableDiffusionVersion.SDXL:
+            url = (
+                "https://huggingface.co/LayerDiffusion/layerdiffusion-v1/resolve/main/vae_transparent_encoder.safetensors"
+            )
+            file_name = "vae_transparent_encoder.safetensors"
+        else:
+            raise ValueError(f"Unknown sd_version {sd_version}")
+
+
+        if not self.vae_transparent_encoder.get(sd_version):
+            model_path = load_file_from_url(
+                url=url, model_dir=layer_model_root, file_name=file_name
+            )
+            self.vae_transparent_encoder[sd_version] = TransparentVAEEncoder(
+                load_torch_file(model_path),
+                device=comfy.model_management.get_torch_device(),
+                dtype=(
+                    torch.float16
+                    if comfy.model_management.should_use_fp16()
+                    else torch.float32
+                ),
+                alpha=300.0,
+            )
+
+        pixel = images 
+
+        if pixel.shape[-1] != 4:
+            raise ValueError(
+                f"LayeredDiffusionEncode expects RGBA (C=4) images, "
+                f"but got C={pixel.shape[-1]}"
+            )
+        
+        print(f"##################################{pixel.shape}")
+        B, H, W, C = pixel.shape
+
+
+        if H % 64 or W % 64:
+            raise AssertionError(
+                f"Height({H}) and Width({W}) must be multiples of 64."
+            )
+        
+
+        np_rgba_uint8 = (
+            (pixel.cpu().numpy() * 255.0)
+            .clip(0, 255)
+            .astype("uint8")
+        )
+
+        latents = []
+        for start in range(0, B, sub_batch_size):
+            batch_rgba = list(np_rgba_uint8[start : start + sub_batch_size])
+            latent, rgb_image = self.vae_transparent_encoder[sd_version].encode_image(
+                sd_vae=vae,                                    # ← patched
+                list_of_np_rgba_hwc_uint8=batch_rgba,
+                use_offset=use_offset,
+            )
+            latents.append(latent)
+
+        latents = torch.cat(latents, dim=0)  # [B, 4, H/8, W/8]
+
+
+        return ({"samples":latents}, rgb_image)
+
+
+
 NODE_CLASS_MAPPINGS = {
     "LayeredDiffusionApply": LayeredDiffusionFG,
     "LayeredDiffusionJointApply": LayeredDiffusionJoint,
@@ -612,7 +726,9 @@ NODE_CLASS_MAPPINGS = {
     "LayeredDiffusionDecode": LayeredDiffusionDecode,
     "LayeredDiffusionDecodeRGBA": LayeredDiffusionDecodeRGBA,
     "LayeredDiffusionDecodeSplit": LayeredDiffusionDecodeSplit,
+    "LayerDiffusionEncode": LayerdiffusionEncode
 }
+
 
 NODE_DISPLAY_NAME_MAPPINGS = {
     "LayeredDiffusionApply": "Layer Diffuse Apply",
@@ -621,6 +737,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "LayeredDiffusionCondJointApply": "Layer Diffuse Cond Joint Apply",
     "LayeredDiffusionDiffApply": "Layer Diffuse Diff Apply",
     "LayeredDiffusionDecode": "Layer Diffuse Decode",
+    "LayerDiffusionEncode": "Layer Diffuse Encode",
     "LayeredDiffusionDecodeRGBA": "Layer Diffuse Decode (RGBA)",
     "LayeredDiffusionDecodeSplit": "Layer Diffuse Decode (Split)",
 }
