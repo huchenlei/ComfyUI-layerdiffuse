@@ -66,8 +66,8 @@ class LoRALinearLayer(torch.nn.Module):
     def forward(self, h):
         org_weight = self.org[0].weight.to(h)
         org_bias = self.org[0].bias.to(h) if self.org[0].bias is not None else None
-        down_weight = self.down.weight
-        up_weight = self.up.weight
+        down_weight = self.down.weight.to(h.device)
+        up_weight = self.up.weight.to(h.device)
         final_weight = org_weight + torch.mm(up_weight, down_weight)
         return torch.nn.functional.linear(h, final_weight, org_bias)
 
@@ -143,6 +143,9 @@ class AttentionSharingUnit(torch.nn.Module):
             in_features=hidden_size, out_features=hidden_size
         )
 
+        device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+        self.to(device)
+
         self.control_convs = None
 
         if use_control:
@@ -155,11 +158,23 @@ class AttentionSharingUnit(torch.nn.Module):
                 for _ in range(self.frames)
             ]
             self.control_convs = torch.nn.ModuleList(self.control_convs)
+            self.control_convs.to(device)
 
         self.control_signals = None
 
     def forward(self, h, context=None, value=None):
         transformer_options = self.transformer_options
+        
+        device = h.device
+        self.temporal_i.to(device)
+        self.temporal_q.to(device)
+        self.temporal_k.to(device)
+        self.temporal_v.to(device)
+        self.temporal_o.to(device)
+        self.to_q_lora.to(device)
+        self.to_k_lora.to(device)
+        self.to_v_lora.to(device)
+        self.to_out_lora.to(device)
 
         modified_hidden_states = einops.rearrange(
             h, "(b f) d c -> f b d c", f=self.frames
@@ -227,6 +242,11 @@ class AttentionSharingUnit(torch.nn.Module):
         )
 
         x = modified_hidden_states
+        self.temporal_n.to(device)
+        if self.temporal_n.weight is not None:
+            self.temporal_n.weight = self.temporal_n.weight.to(device)
+        if self.temporal_n.bias is not None:
+            self.temporal_n.bias = self.temporal_n.bias.to(device)
         x = self.temporal_n(x)
         x = self.temporal_i(x)
         d = x.shape[1]
@@ -345,11 +365,17 @@ class AttentionSharingPatcher(torch.nn.Module):
             self.kwargs_encoder = AdditionalAttentionCondsEncoder()
         else:
             self.kwargs_encoder = None
+            
+        device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+        self.to(device)
+        if self.kwargs_encoder is not None:
+            self.kwargs_encoder.to(device)
 
         self.dtype = torch.float32
         if model_management.should_use_fp16(model_management.get_torch_device()):
             self.dtype = torch.float16
             self.hookers.half()
+            self.hookers.to(device)
         return
 
     def set_control(self, img):

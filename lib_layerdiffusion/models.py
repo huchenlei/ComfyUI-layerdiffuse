@@ -2,6 +2,7 @@ import torch.nn as nn
 import torch
 import cv2
 import numpy as np
+import logging
 
 from tqdm import tqdm
 from typing import Optional, Tuple
@@ -9,6 +10,8 @@ from diffusers.configuration_utils import ConfigMixin, register_to_config
 from diffusers.models.modeling_utils import ModelMixin
 import importlib.metadata
 from packaging.version import parse
+
+DEBUG_ENABLED = False
 
 diffusers_version = importlib.metadata.version('diffusers')
 
@@ -261,11 +264,17 @@ class TransparentVAEDecoder:
 
     @torch.no_grad()
     def estimate_single_pass(self, pixel, latent):
+        """Run a single forward pass through the UNet model."""
         y = self.model(pixel, latent)
         return y
 
     @torch.no_grad()
     def estimate_augmented(self, pixel, latent):
+        """Apply augmentations (flips and rotations) and aggregate results.
+
+        Uses 8 hardcoded augmentations (4 rotations with/without horizontal flip).
+        Replaced torch.median with torch.mean to avoid empty tensor issues on DirectML.
+        """
         args = [
             [False, 0],
             [False, 1],
@@ -275,10 +284,9 @@ class TransparentVAEDecoder:
             [True, 1],
             [True, 2],
             [True, 3],
-        ]
+        ]  # Hardcoded 8 augmentations as in original implementation
 
         result = []
-
         for flip, rok in tqdm(args):
             feed_pixel = pixel.clone()
             feed_latent = latent.clone()
@@ -296,35 +304,57 @@ class TransparentVAEDecoder:
             if flip:
                 eps = torch.flip(eps, dims=(3,))
 
-            result += [eps]
+            result.append(eps)
+            if DEBUG_ENABLED:
+                logging.debug(f"estimate_augmented: single_pass eps shape={eps.shape}, dtype={eps.dtype}")
 
-        result = torch.stack(result, dim=0)
-        if self.load_device == torch.device("mps"):
-            '''
-            In case that apple silicon devices would crash when calling torch.median() on tensors
-            in gpu vram with dimensions higher than 4, we move it to cpu, call torch.median()
-            and then move the result back to gpu.
-            '''
-            median = torch.median(result.cpu(), dim=0).values
-            median = median.to(device=self.load_device, dtype=self.dtype)
-        else:
-            median = torch.median(result, dim=0).values
-        return median
+        result = torch.stack(result, dim=0)  # Shape: [8, B, C, H, W]
+        if DEBUG_ENABLED:
+            logging.debug(f"estimate_augmented: stacked result shape={result.shape}, dtype={result.dtype}")
+
+        # Check for NaN or inf values to catch data issues
+        if torch.isnan(result).any() or torch.isinf(result).any():
+            logging.error("estimate_augmented: stacked tensor contains NaN or inf values")
+            raise ValueError("Stacked tensor contains NaN or inf values")
+
+        # Use mean instead of median for stability, especially on DirectML
+        y = torch.mean(result, dim=0)  # Shape: [B, C, H, W]
+        if DEBUG_ENABLED:
+            logging.debug(f"estimate_augmented: y shape={y.shape}, dtype={y.dtype}")
+
+        return y
 
     @torch.no_grad()
     def decode_pixel(
         self, pixel: torch.TensorType, latent: torch.TensorType
     ) -> torch.TensorType:
-        # pixel.shape = [B, C=3, H, W]
-        assert pixel.shape[1] == 3
+        """Decode pixel and latent tensors to produce an RGBA image.
+
+        Args:
+            pixel: Input RGB image tensor of shape [B, 3, H, W].
+            latent: Latent representation tensor of shape [B, 4, H/8, W/8].
+
+        Returns:
+            Tensor of shape [B, 4, H, W] containing RGBA channels.
+        """
+        assert pixel.shape[1] == 3, f"Expected pixel.shape[1] == 3, got {pixel.shape[1]}"
         pixel_device = pixel.device
         pixel_dtype = pixel.dtype
+        
+        if DEBUG_ENABLED:
+            logging.debug(f"decode_pixel: pixel shape={pixel.shape}, dtype={pixel.dtype}")
+            logging.debug(f"decode_pixel: latent shape={latent.shape}, dtype={latent.dtype}")
 
         pixel = pixel.to(device=self.load_device, dtype=self.dtype)
         latent = latent.to(device=self.load_device, dtype=self.dtype)
-        # y.shape = [B, C=4, H, W]
         y = self.estimate_augmented(pixel, latent)
-        y = y.clip(0, 1)
-        assert y.shape[1] == 4
-        # Restore image to original device of input image.
+        if DEBUG_ENABLED:
+            logging.debug(f"decode_pixel: y shape={y.shape}, dtype={y.dtype}")
+
+        if len(y.shape) < 2:
+            logging.error(f"decode_pixel: y has insufficient dimensions, shape={y.shape}")
+            raise ValueError(f"Expected y to have at least 2 dimensions, got {y.shape}")
+
+        y = y.clip(0, 1)  # Ensure output is in [0, 1] range
+        assert y.shape[1] == 4, f"Expected y.shape[1] == 4, got {y.shape[1]}"
         return y.to(pixel_device, dtype=pixel_dtype)
