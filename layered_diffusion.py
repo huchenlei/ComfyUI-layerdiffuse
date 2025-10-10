@@ -129,7 +129,7 @@ class LayeredDiffusionDecodeRGBA(LayeredDiffusionDecode):
     def decode(self, samples, images, sd_version: str, sub_batch_size: int):
         image, mask = super().decode(samples, images, sd_version, sub_batch_size)
         alpha = 1.0 - mask
-        return JoinImageWithAlpha().join_image_with_alpha(image, alpha)
+        return JoinImageWithAlpha.execute(image, alpha)
 
 
 class LayeredDiffusionDecodeSplit(LayeredDiffusionDecodeRGBA):
