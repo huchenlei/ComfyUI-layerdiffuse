@@ -1,4 +1,6 @@
 # ComfyUI-layerdiffuse - with fix for ComfyUI V3 Schema
+This fork contains fix for V3 Schema in ComfyUi, while it also keeps backwards compability for V1. It can be used with older, as well as newer ComfyUI versions.
+
 ComfyUI implementation of https://github.com/layerdiffusion/LayerDiffuse.
 
 ## Installation
