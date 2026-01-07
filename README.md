@@ -1,4 +1,4 @@
-# ComfyUI-layerdiffuse
+# ComfyUI-layerdiffuse - with fix for ComfyUI V3 Schema
 ComfyUI implementation of https://github.com/layerdiffusion/LayerDiffuse.
 
 ## Installation
