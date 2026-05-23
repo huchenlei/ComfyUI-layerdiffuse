@@ -127,9 +127,14 @@ class LayeredDiffusionDecodeRGBA(LayeredDiffusionDecode):
     RETURN_TYPES = ("IMAGE",)
 
     def decode(self, samples, images, sd_version: str, sub_batch_size: int):
+        import torch
         image, mask = super().decode(samples, images, sd_version, sub_batch_size)
         alpha = 1.0 - mask
-        return JoinImageWithAlpha().join_image_with_alpha(image, alpha)
+        batch_size = min(len(image), len(alpha))
+        out_images = []
+        for i in range(batch_size):
+            out_images.append(torch.cat((image[i][:, :, :3], alpha[i].unsqueeze(2)), dim=2))
+        return (torch.stack(out_images),)
 
 
 class LayeredDiffusionDecodeSplit(LayeredDiffusionDecodeRGBA):
